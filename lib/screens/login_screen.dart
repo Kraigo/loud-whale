@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/providers/mastodon_provider.dart';
+import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,9 +40,24 @@ class _LoginScreenState extends State<LoginScreen> {
         ElevatedButton(
             onPressed: isDisabled
                 ? null
-                : () {
+                : () async {
                     final instanceName = instanceTextController.text;
-                    mastodonProvider.init(instanceName);
+                    mastodonProvider.openLogin(instanceName);
+
+                    final result = await showDialog(
+                      context: context,
+                      builder: (context) {
+                        return const PromptDialog();
+                      },
+                    );
+
+                    if (result != null) {
+                      mastodonProvider.init(
+                        instance: instanceName,
+                        token: result,
+                      );
+                      // AppKeys.navigatorKey.currentState!.pushNamed(Routes.library);
+                    }
                   },
             child: Text("Login")),
       ]),
