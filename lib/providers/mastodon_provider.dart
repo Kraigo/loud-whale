@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MastodonProvider extends ChangeNotifier {
   String clientId;
-  MastodonApi? api;
+  static MastodonApi? api;
   bool _loading = false;
   bool get loading => _loading;
 
