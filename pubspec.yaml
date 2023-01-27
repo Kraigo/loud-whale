@@ -43,6 +43,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   path: ^1.8.2
   floor: ^1.4.1
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mastodon/providers/mastodon_provider.dart';
+import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -12,19 +12,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  final database = await $FloorAppDatabase.databaseBuilder(dotenv.get('DATABASE_NAME')).build();
+  final database = await $FloorAppDatabase
+      .databaseBuilder(dotenv.get('DATABASE_NAME'))
+      .build();
 
   runApp(MultiProvider(
     providers: [
       Provider.value(value: database),
       ChangeNotifierProvider(
-        create: (context) => MastodonProvider(
+        create: (context) => AuthorizationProvider(
           clientId: dotenv.get('MASTODON_CLIENT_ID'),
+          clientSecret: dotenv.get('MASTODON_CLIENT_SECRET'),
+          settingDao: database.settingDao,
         ),
       ),
       ChangeNotifierProvider(
         create: (context) => TimelineProvider(
-          statusDao: database.statusDao
+          statusDao: database.statusDao,
         ),
       ),
     ],

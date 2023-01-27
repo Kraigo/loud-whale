@@ -2,15 +2,7 @@ import 'package:floor/floor.dart';
 
 import 'account_model.dart';
 
-@Entity(
-  foreignKeys: [
-    ForeignKey(
-      childColumns: ['account_id'],
-      parentColumns: ['id'],
-      entity: Account,
-    )
-  ],
-)
+@entity
 class Status {
   @primaryKey
   String id;

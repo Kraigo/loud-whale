@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/dao/status_dao.dart';
-import 'package:mastodon/models/models.dart';
-
-import 'mastodon_provider.dart';
+import 'package:mastodon/enties/entries.dart';
+import 'package:mastodon/helpers/mastodon_helper.dart';
 
 class TimelineProvider extends ChangeNotifier {
   bool _loading = false;
@@ -19,7 +18,7 @@ class TimelineProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final resp = await MastodonProvider.api?.v1.timelines.lookupHomeTimeline();
+      final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
         for (var s in resp.data) {
           final status = Status(

@@ -1,5 +1,5 @@
 import 'package:floor/floor.dart';
-import 'package:mastodon/models/models.dart';
+import 'package:mastodon/enties/entries.dart';
 
 @dao
 abstract class StatusDao {

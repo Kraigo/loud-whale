@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/screens/login_screen.dart';
+import 'package:mastodon/screens/timeline_screen.dart';
 
 class Routes {
-  static const home = '/';
+  static const timeline = '/timeline';
   static const login = '/login';
 
   static Route onGenerateRoute(RouteSettings settings) {
@@ -14,6 +15,7 @@ class Routes {
     
     var routes = <String, WidgetBuilder>{
       Routes.login: (context) => const LoginScreen(),
+      Routes.timeline: (context) => const TimelineScreen(),
     };
     
     WidgetBuilder builder = routes[settings.name] ?? routes.values.first;

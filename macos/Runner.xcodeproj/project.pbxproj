@@ -159,7 +159,6 @@
 				39F1D838CB3AE1DD2581D043 /* Pods-Runner.release.xcconfig */,
 				64A3FB4A2373C1F24CCE3886 /* Pods-Runner.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -572,6 +571,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kraigo.mastodon;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};

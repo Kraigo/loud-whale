@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/providers/mastodon_provider.dart';
+import 'package:mastodon/helpers/mastodon_helper.dart';
+import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
+
+import '../base/routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     instanceTextController = TextEditingController(text: 'mstdn.social');
+    Future.microtask(_checkAuthorization);
     super.initState();
   }
 
@@ -25,47 +29,66 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  _checkAuthorization() async {
+    final authorizationProvider = context.read<AuthorizationProvider>();
+    final router = Navigator.of(context);
+
+    await authorizationProvider.checkAuthorization();
+
+    await authorizationProvider.removeAuthorization();
+
+    if (authorizationProvider.isAuthorized) {
+      await router.pushNamed(Routes.timeline);
+    }
+  }
+
+  _onLogin() async {
+    final authorizationProvider = context.read<AuthorizationProvider>();
+    final router = Navigator.of(context);
+    final instanceName = instanceTextController.text;
+
+    authorizationProvider.openLogin(instanceName);
+
+    final code = await showDialog(
+      context: context,
+      builder: (context) {
+        return const PromptDialog();
+      },
+    );
+
+    if (code != null) {
+      final token = await authorizationProvider.getToken(instanceName, code);
+
+      if (token != null) {
+        await authorizationProvider.setAuthorization(Authorization(
+          token: token.accessToken,
+          instance: instanceName,
+        ));
+        await router.pushNamed(Routes.timeline);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mastodonProvider = context.watch<MastodonProvider>();
     return Scaffold(
       body: Column(children: [
         TextField(
           controller: instanceTextController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Enter a search term',
           ),
         ),
         ElevatedButton(
-            onPressed: isDisabled
-                ? null
-                : () async {
-                    final instanceName = instanceTextController.text;
-                    mastodonProvider.openLogin(instanceName);
-
-                    final result = await showDialog(
-                      context: context,
-                      builder: (context) {
-                        return const PromptDialog();
-                      },
-                    );
-
-                    if (result != null) {
-                      mastodonProvider.init(
-                        instance: instanceName,
-                        token: result,
-                      );
-                      // AppKeys.navigatorKey.currentState!.pushNamed(Routes.library);
-                    }
-                  },
-            child: Text("Login")),
+            onPressed: isDisabled ? null : _onLogin,
+            child: const Text("Login")),
       ]),
     );
   }
 
   bool get isDisabled {
-    return context.read<MastodonProvider>().loading ||
+    return context.read<AuthorizationProvider>().loading ||
         instanceTextController.text.isEmpty;
   }
 }
