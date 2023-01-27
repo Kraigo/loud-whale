@@ -1,6 +1,7 @@
 // required package imports
 import 'dart:async';
 import 'package:floor/floor.dart';
+import 'package:mastodon/dao/account_dao.dart';
 import 'package:mastodon/dao/setting_dao.dart';
 import 'package:mastodon/enties/setting_model.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -14,4 +15,5 @@ part 'database.g.dart';
 abstract class AppDatabase extends FloorDatabase {
   StatusDao get statusDao;
   SettingDao get settingDao;
+  AccountDao get accountDao;
 }

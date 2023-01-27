@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:mastodon/widgets/status_card.dart';
 import 'package:provider/provider.dart';
 
 class TimelineScreen extends StatefulWidget {
@@ -22,6 +23,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
     context.read<TimelineProvider>().loadTimeline();
   }
 
+  Future<void> _pullRefresh() async {
+    await context.read<TimelineProvider>().loadTimeline();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +37,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
           child: _TimelineLoading(),
         ),
       ),
-      body: _TimelineList(),
+      body: RefreshIndicator(
+        onRefresh: _pullRefresh,
+        child: _TimelineList(),
+      ),
     );
   }
 }
@@ -47,7 +55,7 @@ class _TimelineList extends StatelessWidget {
     return ListView.builder(
       itemBuilder: (context, index) {
         final item = statuses[index];
-        return ListTile(title: Text(item.content));
+        return StatusCard(item);
       },
       itemCount: statuses.length,
     );

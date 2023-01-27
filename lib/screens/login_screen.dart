@@ -35,8 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     await authorizationProvider.checkAuthorization();
 
-    await authorizationProvider.removeAuthorization();
-
     if (authorizationProvider.isAuthorized) {
       await router.pushNamed(Routes.timeline);
     }

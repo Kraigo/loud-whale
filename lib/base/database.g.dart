@@ -65,6 +65,8 @@ class _$AppDatabase extends AppDatabase {
 
   SettingDao? _settingDaoInstance;
 
+  AccountDao? _accountDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -107,6 +109,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   SettingDao get settingDao {
     return _settingDaoInstance ??= _$SettingDao(database, changeListener);
+  }
+
+  @override
+  AccountDao get accountDao {
+    return _accountDaoInstance ??= _$AccountDao(database, changeListener);
   }
 }
 
@@ -190,5 +197,55 @@ class _$SettingDao extends SettingDao {
   @override
   Future<void> insertSetting(Setting setting) async {
     await _settingInsertionAdapter.insert(setting, OnConflictStrategy.replace);
+  }
+}
+
+class _$AccountDao extends AccountDao {
+  _$AccountDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _accountInsertionAdapter = InsertionAdapter(
+            database,
+            'Account',
+            (Account item) => <String, Object?>{
+                  'id': item.id,
+                  'username': item.username,
+                  'display_name': item.display_name
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<Account> _accountInsertionAdapter;
+
+  @override
+  Future<List<Account>> findAllAccountes() async {
+    return _queryAdapter.queryList('SELECT * FROM Account',
+        mapper: (Map<String, Object?> row) => Account(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            display_name: row['display_name'] as String));
+  }
+
+  @override
+  Stream<Account?> findAccountById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM Account WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => Account(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            display_name: row['display_name'] as String),
+        arguments: [id],
+        queryableName: 'Account',
+        isView: false);
+  }
+
+  @override
+  Future<void> insertAccount(Account account) async {
+    await _accountInsertionAdapter.insert(account, OnConflictStrategy.replace);
   }
 }

@@ -29,6 +29,7 @@ void main() async {
       ChangeNotifierProvider(
         create: (context) => TimelineProvider(
           statusDao: database.statusDao,
+          accountDao: database.accountDao
         ),
       ),
     ],
