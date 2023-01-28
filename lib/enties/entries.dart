@@ -1,2 +1,2 @@
-export 'account_model.dart';
-export 'status_model.dart';
+export 'account_entity.dart';
+export 'status_entity.dart';

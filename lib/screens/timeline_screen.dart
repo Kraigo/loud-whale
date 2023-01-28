@@ -37,9 +37,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
           child: _TimelineLoading(),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _pullRefresh,
-        child: _TimelineList(),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: RefreshIndicator(
+          onRefresh: _pullRefresh,
+          child: _TimelineList(),
+        ),
       ),
     );
   }
@@ -52,11 +55,14 @@ class _TimelineList extends StatelessWidget {
   Widget build(BuildContext context) {
     final timelineProvider = context.watch<TimelineProvider>();
     final statuses = timelineProvider.statuses;
-    return ListView.builder(
+    return ListView.separated(
       itemBuilder: (context, index) {
         final item = statuses[index];
         return StatusCard(item);
       },
+      separatorBuilder: ((context, index) {
+        return Divider();
+      }),
       itemCount: statuses.length,
     );
   }

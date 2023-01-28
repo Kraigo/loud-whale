@@ -1,28 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 class StatusCard extends StatelessWidget {
-  final Status status;
+  final StatusEntity status;
   const StatusCard(this.status, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(children: [
-        _StatusCardAuthor(status),
-        Text(status.content),
-        _StatusCardActions()
-      ]),
-    );
+    return Column(children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _StatusCardAuthor(status),
+          TimeAgo(status.createdAt),
+        ],
+      ),
+      Html(
+          data: status.content,
+          onLinkTap: (url, context, attributes, element) {
+            debugPrint(url);
+          }),
+      _StatusCardActions()
+    ]);
   }
 }
 
 class _StatusCardAuthor extends StatelessWidget {
-  final Status status;
+  final StatusEntity status;
   const _StatusCardAuthor(this.status, {super.key});
 
   @override
@@ -31,18 +39,38 @@ class _StatusCardAuthor extends StatelessWidget {
         stream:
             context.read<TimelineProvider>().getAccountById(status.accountId),
         builder: (context, snapshot) {
+          final account = snapshot.data;
+
           var displayName = 'User';
 
-          if (snapshot.data?.display_name.isNotEmpty ?? false) {
-            displayName = snapshot.data!.display_name;
+          if (account?.displayName.isNotEmpty ?? false) {
+            displayName = snapshot.data!.displayName;
           }
-          if (snapshot.data?.display_name.isEmpty ?? false) {
+          if (account?.displayName.isEmpty ?? false) {
             displayName = snapshot.data!.username;
           }
 
           return Row(children: [
-                Text(displayName)
-              ]);
+            AccountAvatar(
+              avatar: account?.avatar,
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.bodyText1,
+                ),
+                Text(
+                  account?.acct ?? '',
+                  style: Theme.of(context).textTheme.caption,
+                ),
+              ],
+            )
+          ]);
         });
   }
 }

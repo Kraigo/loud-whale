@@ -3,15 +3,15 @@ import 'package:mastodon/enties/setting_model.dart';
 
 @dao
 abstract class SettingDao {
-  @Query('SELECT * FROM Setting')
+  @Query('SELECT * FROM settings')
   Future<List<Setting>> findAllSettings();
 
-  @Query('SELECT * FROM Setting WHERE name = :name')
+  @Query('SELECT * FROM settings WHERE name = :name')
   Future<Setting?> findSettingByName(String name);
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertSetting(Setting setting);
 
-  @Query('DELETE FROM Setting WHERE name = :name')
+  @Query('DELETE FROM settings WHERE name = :name')
   Future<void> removeSettingByName(String name);
 }

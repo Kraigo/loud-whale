@@ -3,12 +3,12 @@ import 'package:mastodon/enties/entries.dart';
 
 @dao
 abstract class AccountDao {
-  @Query('SELECT * FROM Account')
-  Future<List<Account>> findAllAccountes();
+  @Query('SELECT * FROM accounts')
+  Future<List<AccountEntity>> findAllAccountes();
 
-  @Query('SELECT * FROM Account WHERE id = :id')
-  Stream<Account?> findAccountById(String id);
+  @Query('SELECT * FROM accounts WHERE id = :id')
+  Stream<AccountEntity?> findAccountById(String id);
 
   @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> insertAccount(Account account);
+  Future<void> insertAccount(AccountEntity account);
 }

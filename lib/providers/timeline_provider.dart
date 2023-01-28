@@ -8,14 +8,14 @@ class TimelineProvider extends ChangeNotifier {
   bool _loading = false;
   bool get loading => _loading;
 
-  List<Status> _statuses = [];
-  List<Status> get statuses => _statuses;
+  List<StatusEntity> _statuses = [];
+  List<StatusEntity> get statuses => _statuses;
 
   StatusDao statusDao;
   AccountDao accountDao;
   TimelineProvider({required this.statusDao, required this.accountDao});
 
-  Stream<Account?> getAccountById(String id) {
+  Stream<AccountEntity?> getAccountById(String id) {
     return accountDao.findAccountById(id);
   }
 
@@ -27,17 +27,12 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
         for (var s in resp.data) {
-          await statusDao.insertStatus(Status(
-            id: s.id,
-            content: s.content,
-            accountId: s.account.id,
-          ));
+          await statusDao.insertStatus(StatusEntity.fromModel(s));
+          if (s.reblog != null) {
+            await statusDao.insertStatus(StatusEntity.fromModel(s.reblog!));
+          }
 
-          await accountDao.insertAccount(Account(
-            id: s.account.id,
-            username: s.account.username,
-            display_name: s.account.displayName,
-          ));
+          await accountDao.insertAccount(AccountEntity.fromModel(s.account));
         }
 
         _statuses = await statusDao.findAllStatuses();

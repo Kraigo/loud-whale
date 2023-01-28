@@ -89,11 +89,11 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Account` (`id` TEXT NOT NULL, `username` TEXT NOT NULL, `display_name` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `username` TEXT NOT NULL, `displayName` TEXT NOT NULL, `acct` TEXT NOT NULL, `note` TEXT NOT NULL, `url` TEXT NOT NULL, `avatar` TEXT NOT NULL, `avatarStatic` TEXT NOT NULL, `header` TEXT NOT NULL, `headerStatic` TEXT NOT NULL, `followersCount` INTEGER NOT NULL, `followingCount` INTEGER NOT NULL, `subscribingCount` INTEGER, `statusesCount` INTEGER NOT NULL, `isBot` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Status` (`id` TEXT NOT NULL, `content` TEXT NOT NULL, `account_id` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `account_id` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Setting` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
+            'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -122,12 +122,40 @@ class _$StatusDao extends StatusDao {
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database),
-        _statusInsertionAdapter = InsertionAdapter(
+        _statusEntityInsertionAdapter = InsertionAdapter(
             database,
-            'Status',
-            (Status item) => <String, Object?>{
+            'statuses',
+            (StatusEntity item) => <String, Object?>{
                   'id': item.id,
+                  'url': item.url,
+                  'uri': item.uri,
                   'content': item.content,
+                  'spoilerText': item.spoilerText,
+                  'visibility': item.visibility,
+                  'favouritesCount': item.favouritesCount,
+                  'repliesCount': item.repliesCount,
+                  'reblogsCount': item.reblogsCount,
+                  'language': item.language,
+                  'inReplyToId': item.inReplyToId,
+                  'inReplyToAccountId': item.inReplyToAccountId,
+                  'isFavourited': item.isFavourited == null
+                      ? null
+                      : (item.isFavourited! ? 1 : 0),
+                  'isReblogged': item.isReblogged == null
+                      ? null
+                      : (item.isReblogged! ? 1 : 0),
+                  'isMuted':
+                      item.isMuted == null ? null : (item.isMuted! ? 1 : 0),
+                  'isBookmarked': item.isBookmarked == null
+                      ? null
+                      : (item.isBookmarked! ? 1 : 0),
+                  'isSensitive': item.isSensitive == null
+                      ? null
+                      : (item.isSensitive! ? 1 : 0),
+                  'isPinned':
+                      item.isPinned == null ? null : (item.isPinned! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt),
+                  'reblogId': item.reblogId,
                   'account_id': item.accountId
                 });
 
@@ -137,20 +165,50 @@ class _$StatusDao extends StatusDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<Status> _statusInsertionAdapter;
+  final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
 
   @override
-  Future<List<Status>> findAllStatuses() async {
-    return _queryAdapter.queryList('SELECT * FROM Status',
-        mapper: (Map<String, Object?> row) => Status(
+  Future<List<StatusEntity>> findAllStatuses() async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM statuses WHERE isReblogged IS false ORDER BY createdAt DESC',
+        mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
             content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['account_id'] as String));
   }
 
   @override
-  Future<void> insertStatus(Status status) async {
-    await _statusInsertionAdapter.insert(status, OnConflictStrategy.replace);
+  Future<void> insertStatus(StatusEntity status) async {
+    await _statusEntityInsertionAdapter.insert(
+        status, OnConflictStrategy.replace);
   }
 }
 
@@ -161,7 +219,7 @@ class _$SettingDao extends SettingDao {
   )   : _queryAdapter = QueryAdapter(database),
         _settingInsertionAdapter = InsertionAdapter(
             database,
-            'Setting',
+            'settings',
             (Setting item) =>
                 <String, Object?>{'name': item.name, 'value': item.value});
 
@@ -175,14 +233,14 @@ class _$SettingDao extends SettingDao {
 
   @override
   Future<List<Setting>> findAllSettings() async {
-    return _queryAdapter.queryList('SELECT * FROM Setting',
+    return _queryAdapter.queryList('SELECT * FROM settings',
         mapper: (Map<String, Object?> row) => Setting(
             name: row['name'] as String, value: row['value'] as String));
   }
 
   @override
   Future<Setting?> findSettingByName(String name) async {
-    return _queryAdapter.query('SELECT * FROM Setting WHERE name = ?1',
+    return _queryAdapter.query('SELECT * FROM settings WHERE name = ?1',
         mapper: (Map<String, Object?> row) =>
             Setting(name: row['name'] as String, value: row['value'] as String),
         arguments: [name]);
@@ -190,7 +248,7 @@ class _$SettingDao extends SettingDao {
 
   @override
   Future<void> removeSettingByName(String name) async {
-    await _queryAdapter.queryNoReturn('DELETE FROM Setting WHERE name = ?1',
+    await _queryAdapter.queryNoReturn('DELETE FROM settings WHERE name = ?1',
         arguments: [name]);
   }
 
@@ -205,13 +263,26 @@ class _$AccountDao extends AccountDao {
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database, changeListener),
-        _accountInsertionAdapter = InsertionAdapter(
+        _accountEntityInsertionAdapter = InsertionAdapter(
             database,
-            'Account',
-            (Account item) => <String, Object?>{
+            'accounts',
+            (AccountEntity item) => <String, Object?>{
                   'id': item.id,
                   'username': item.username,
-                  'display_name': item.display_name
+                  'displayName': item.displayName,
+                  'acct': item.acct,
+                  'note': item.note,
+                  'url': item.url,
+                  'avatar': item.avatar,
+                  'avatarStatic': item.avatarStatic,
+                  'header': item.header,
+                  'headerStatic': item.headerStatic,
+                  'followersCount': item.followersCount,
+                  'followingCount': item.followingCount,
+                  'subscribingCount': item.subscribingCount,
+                  'statusesCount': item.statusesCount,
+                  'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
                 },
             changeListener);
 
@@ -221,31 +292,61 @@ class _$AccountDao extends AccountDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<Account> _accountInsertionAdapter;
+  final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
 
   @override
-  Future<List<Account>> findAllAccountes() async {
-    return _queryAdapter.queryList('SELECT * FROM Account',
-        mapper: (Map<String, Object?> row) => Account(
+  Future<List<AccountEntity>> findAllAccountes() async {
+    return _queryAdapter.queryList('SELECT * FROM accounts',
+        mapper: (Map<String, Object?> row) => AccountEntity(
             id: row['id'] as String,
             username: row['username'] as String,
-            display_name: row['display_name'] as String));
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)));
   }
 
   @override
-  Stream<Account?> findAccountById(String id) {
-    return _queryAdapter.queryStream('SELECT * FROM Account WHERE id = ?1',
-        mapper: (Map<String, Object?> row) => Account(
+  Stream<AccountEntity?> findAccountById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM accounts WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AccountEntity(
             id: row['id'] as String,
             username: row['username'] as String,
-            display_name: row['display_name'] as String),
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
         arguments: [id],
-        queryableName: 'Account',
+        queryableName: 'accounts',
         isView: false);
   }
 
   @override
-  Future<void> insertAccount(Account account) async {
-    await _accountInsertionAdapter.insert(account, OnConflictStrategy.replace);
+  Future<void> insertAccount(AccountEntity account) async {
+    await _accountEntityInsertionAdapter.insert(
+        account, OnConflictStrategy.replace);
   }
 }
+
+// ignore_for_file: unused_element
+final _dateTimeConverter = DateTimeConverter();
