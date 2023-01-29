@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/dao/account_dao.dart';
+import 'package:mastodon/dao/attachment_dao.dart';
 import 'package:mastodon/dao/status_dao.dart';
+import 'package:mastodon/enties/attachment_entity.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/helpers/mastodon_helper.dart';
+import 'package:mastodon_api/mastodon_api.dart';
 
 class TimelineProvider extends ChangeNotifier {
   bool _loading = false;
@@ -13,10 +16,19 @@ class TimelineProvider extends ChangeNotifier {
 
   StatusDao statusDao;
   AccountDao accountDao;
-  TimelineProvider({required this.statusDao, required this.accountDao});
+  AttachmentDao attachmentDao;
+  TimelineProvider({
+    required this.statusDao,
+    required this.accountDao,
+    required this.attachmentDao,
+  });
 
   Stream<AccountEntity?> getAccountById(String id) {
     return accountDao.findAccountById(id);
+  }
+  
+  Stream<List<AttachmentEntity>> getAttachmentsByStatus(String statusId) {
+    return attachmentDao.findAttachemntsByStatus(statusId);
   }
 
   loadTimeline() async {
@@ -27,19 +39,35 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
         for (var s in resp.data) {
-          await statusDao.insertStatus(StatusEntity.fromModel(s));
+          await _saveStatus(s);
           if (s.reblog != null) {
-            await statusDao.insertStatus(StatusEntity.fromModel(s.reblog!));
+            await _saveStatus(s.reblog!);
           }
-
-          await accountDao.insertAccount(AccountEntity.fromModel(s.account));
         }
-
         _statuses = await statusDao.findAllStatuses();
       }
     } finally {
       _loading = false;
       notifyListeners();
     }
+  }
+
+  _saveStatus(Status status) async {
+    await statusDao.insertStatus(StatusEntity.fromModel(status));
+    await accountDao.insertAccount(AccountEntity.fromModel(status.account));
+
+    for (var attachment in status.mediaAttachments) {
+      await attachmentDao
+          .insertAttachment(AttachmentEntity.fromModel(status.id, attachment));
+    }
+  }
+
+  StatusEntity? getStatusById(String id) {
+    for (var status in _statuses) {
+      if (status.id == id) {
+        return status;
+      }
+    }
+    return null;
   }
 }

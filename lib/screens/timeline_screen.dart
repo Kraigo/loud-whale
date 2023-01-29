@@ -58,6 +58,18 @@ class _TimelineList extends StatelessWidget {
     return ListView.separated(
       itemBuilder: (context, index) {
         final item = statuses[index];
+
+        // return StreamBuilder(
+        //   timelineProvider.
+        //   builder:(context, snapshot) {
+        //     StatusCard(item, reblog: snapshot.data,)
+        //   },);
+        if (item.reblogId != null) {
+          final reblog = timelineProvider.getStatusById(item.reblogId!);
+          if (reblog != null) {
+            return StatusCard(reblog, reblog: item,);
+          }
+        }
         return StatusCard(item);
       },
       separatorBuilder: ((context, index) {

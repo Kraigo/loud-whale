@@ -6,10 +6,22 @@ class TimeAgo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Icon(Icons.watch_later_outlined),
-        Text(_format),
+        Icon(
+          Icons.watch_later_outlined,
+          size: 12,
+          color: theme.hintColor,
+        ),
+        SizedBox(
+          width: 2,
+        ),
+        Text(
+          _format,
+          style: theme.textTheme.caption,
+        ),
       ],
     );
   }

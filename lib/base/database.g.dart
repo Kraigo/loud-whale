@@ -67,6 +67,8 @@ class _$AppDatabase extends AppDatabase {
 
   AccountDao? _accountDaoInstance;
 
+  AttachmentDao? _attachmentDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -94,6 +96,8 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `account_id` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `status_id` TEXT NOT NULL, `type` INTEGER NOT NULL, `url` TEXT NOT NULL, `previewUrl` TEXT NOT NULL, `remoteUrl` TEXT, `description` TEXT, FOREIGN KEY (`status_id`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -115,13 +119,18 @@ class _$AppDatabase extends AppDatabase {
   AccountDao get accountDao {
     return _accountDaoInstance ??= _$AccountDao(database, changeListener);
   }
+
+  @override
+  AttachmentDao get attachmentDao {
+    return _attachmentDaoInstance ??= _$AttachmentDao(database, changeListener);
+  }
 }
 
 class _$StatusDao extends StatusDao {
   _$StatusDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database),
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
         _statusEntityInsertionAdapter = InsertionAdapter(
             database,
             'statuses',
@@ -157,7 +166,8 @@ class _$StatusDao extends StatusDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
                   'account_id': item.accountId
-                });
+                },
+            changeListener);
 
   final sqflite.DatabaseExecutor database;
 
@@ -203,6 +213,46 @@ class _$StatusDao extends StatusDao {
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['account_id'] as String));
+  }
+
+  @override
+  Stream<StatusEntity?> findStatusById(int id) {
+    return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['account_id'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
   }
 
   @override
@@ -345,6 +395,73 @@ class _$AccountDao extends AccountDao {
   Future<void> insertAccount(AccountEntity account) async {
     await _accountEntityInsertionAdapter.insert(
         account, OnConflictStrategy.replace);
+  }
+}
+
+class _$AttachmentDao extends AttachmentDao {
+  _$AttachmentDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _attachmentEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'attachments',
+            (AttachmentEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'status_id': item.statusId,
+                  'type': item.type,
+                  'url': item.url,
+                  'previewUrl': item.previewUrl,
+                  'remoteUrl': item.remoteUrl,
+                  'description': item.description
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<AttachmentEntity> _attachmentEntityInsertionAdapter;
+
+  @override
+  Stream<AttachmentEntity?> findAttachmentById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM attachments WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AttachmentEntity(
+            statusId: row['status_id'] as String,
+            id: row['id'] as String,
+            type: row['type'] as int,
+            url: row['url'] as String,
+            previewUrl: row['previewUrl'] as String,
+            remoteUrl: row['remoteUrl'] as String?,
+            description: row['description'] as String?),
+        arguments: [id],
+        queryableName: 'attachments',
+        isView: false);
+  }
+
+  @override
+  Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM attachments WHERE status_id = ?1',
+        mapper: (Map<String, Object?> row) => AttachmentEntity(
+            statusId: row['status_id'] as String,
+            id: row['id'] as String,
+            type: row['type'] as int,
+            url: row['url'] as String,
+            previewUrl: row['previewUrl'] as String,
+            remoteUrl: row['remoteUrl'] as String?,
+            description: row['description'] as String?),
+        arguments: [statusId],
+        queryableName: 'attachments',
+        isView: false);
+  }
+
+  @override
+  Future<void> insertAttachment(AttachmentEntity attachment) async {
+    await _attachmentEntityInsertionAdapter.insert(
+        attachment, OnConflictStrategy.replace);
   }
 }
 

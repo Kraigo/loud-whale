@@ -9,8 +9,8 @@ class AccountAvatar extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(5),
       child: SizedBox(
-        width: 48,
-        height: 48,
+        width: 40,
+        height: 40,
         child: avatar != null ? Image.network(avatar!) : const Text(":)"),
       ),
     );
