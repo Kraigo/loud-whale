@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:provider/provider.dart';
+
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/status_card.dart';
-import 'package:provider/provider.dart';
 
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
@@ -37,12 +38,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
           child: _TimelineLoading(),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: RefreshIndicator(
-          onRefresh: _pullRefresh,
-          child: _TimelineList(),
-        ),
+      body: RefreshIndicator(
+        onRefresh: _pullRefresh,
+        child: _TimelineList(),
       ),
     );
   }
@@ -67,10 +65,15 @@ class _TimelineList extends StatelessWidget {
         if (item.reblogId != null) {
           final reblog = timelineProvider.getStatusById(item.reblogId!);
           if (reblog != null) {
-            return StatusCard(reblog, reblog: item,);
+            return _ListItemContainer(StatusCard(
+              reblog,
+              reblog: item,
+            ));
           }
         }
-        return StatusCard(item);
+        return _ListItemContainer(
+          StatusCard(item),
+        );
       },
       separatorBuilder: ((context, index) {
         return Divider();
@@ -90,5 +93,21 @@ class _TimelineLoading extends StatelessWidget {
       return LinearProgressIndicator();
     }
     return Container();
+  }
+}
+
+class _ListItemContainer extends StatelessWidget {
+  final Widget child;
+  const _ListItemContainer(this.child, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    return UnconstrainedBox(
+      child: Flexible(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: child,
+        ),
+      ),
+    );
   }
 }

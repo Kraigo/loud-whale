@@ -12,23 +12,34 @@ class StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      if (reblog != null) _StatusCardReblogged(reblog!),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _StatusCardAuthor(status),
-          TimeAgo(status.createdAt),
-        ],
-      ),
-      Html(
-          data: status.content,
-          onLinkTap: (url, context, attributes, element) {
-            debugPrint(url);
-          }),
-      _StatusCardMedia(status),
-      _StatusCardActions(status)
-    ]);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(children: [
+        if (reblog != null) _StatusCardReblogged(reblog!),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _StatusCardAuthor(status),
+            TimeAgo(status.createdAt),
+          ],
+        ),
+        Html(
+            style: {
+              'body': Style(
+                  padding: const EdgeInsets.all(0),
+                  margin: const EdgeInsets.all(0))
+            },
+            data: status.content,
+            onLinkTap: (url, context, attributes, element) {
+              debugPrint(url);
+            }),
+        _StatusCardMedia(status),
+        const SizedBox(
+          height: 10,
+        ),
+        _StatusCardActions(status)
+      ]),
+    );
   }
 }
 
@@ -178,8 +189,24 @@ class _StatusCardMedia extends StatelessWidget {
       stream:
           context.read<TimelineProvider>().getAttachmentsByStatus(status.id),
       builder: (context, snapshot) {
+        if (snapshot.data == null) {
+          return Container();
+        }
         return Column(
-            children: snapshot.data!.map((e) => Text(e.previewUrl)).toList());
+            children: snapshot.data!
+                .map((e) => SizedBox(
+                      height: 250,
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: Image.network(
+                          e.previewUrl,
+                          alignment: const Alignment(0.5, 0.5),
+                          fit: BoxFit.fitWidth,
+                        ),
+                      ),
+                    ))
+                .toList());
       },
     );
   }
