@@ -6,6 +6,7 @@ import 'package:mastodon/dao/attachment_dao.dart';
 import 'package:mastodon/dao/setting_dao.dart';
 import 'package:mastodon/enties/setting_model.dart';
 import 'package:mastodon/helpers/datetime_converter.dart';
+// ignore: depend_on_referenced_packages
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import 'package:mastodon/dao/status_dao.dart';

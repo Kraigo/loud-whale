@@ -52,6 +52,27 @@ class TimelineProvider extends ChangeNotifier {
     }
   }
 
+  loadThread(String statusId) async {
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
+      if (resp != null) {
+        for (var s in resp.data) {
+          await _saveStatus(s);
+          if (s.reblog != null) {
+            await _saveStatus(s.reblog!);
+          }
+        }
+        _statuses = await statusDao.findAllStatuses();
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
   _saveStatus(Status status) async {
     await statusDao.insertStatus(StatusEntity.fromModel(status));
     await accountDao.insertAccount(AccountEntity.fromModel(status.account));
@@ -69,5 +90,9 @@ class TimelineProvider extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  Stream<StatusEntity?> getStatusByIdStream(String id) {
+    return statusDao.findStatusById(id);
   }
 }

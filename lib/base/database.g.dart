@@ -216,7 +216,7 @@ class _$StatusDao extends StatusDao {
   }
 
   @override
-  Stream<StatusEntity?> findStatusById(int id) {
+  Stream<StatusEntity?> findStatusById(String id) {
     return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,

@@ -7,7 +7,7 @@ abstract class StatusDao {
   Future<List<StatusEntity>> findAllStatuses();
 
   @Query('SELECT * FROM statuses WHERE id = :id')
-  Stream<StatusEntity?> findStatusById(int id);
+  Stream<StatusEntity?> findStatusById(String id);
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertStatus(StatusEntity status);
