@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:mastodon/providers/timeline_provider.dart';
-import 'package:mastodon/widgets/status_card.dart';
 
-class TimelineScreen extends StatefulWidget {
+class TimelineScreen extends StatefulWidget{
   const TimelineScreen({super.key});
 
   @override
@@ -54,6 +51,12 @@ class _TimelineList extends StatelessWidget {
   Widget build(BuildContext context) {
     final timelineProvider = context.watch<TimelineProvider>();
     final statuses = timelineProvider.statuses;
+
+    // return StreamBuilder(
+    //   stream: context.read<AppDatabase>().statusDao.findAllStatuses()
+    //   builder: (context, (context, snapshot) {
+      
+    // }));
     return ListView.separated(
       itemBuilder: (context, index) {
         final item = statuses[index];

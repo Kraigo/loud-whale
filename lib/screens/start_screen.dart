@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
+import 'package:mastodon/screens/home_screen.dart';
 import 'package:mastodon/screens/login_screen.dart';
-import 'package:mastodon/screens/timeline_screen.dart';
 import 'package:provider/provider.dart';
 
 class StartScreen extends StatefulWidget {
@@ -29,13 +29,13 @@ class _StartScreenState extends State<StartScreen> with WidgetsBindingObserver {
       router.pushAndRemoveUntil(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const TimelineScreen(),
+                const HomeScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return child;
             },
           ),
-          ModalRoute.withName(Routes.timeline));
+          ModalRoute.withName(Routes.home));
     } else {
       router.pushAndRemoveUntil(
         PageRouteBuilder(

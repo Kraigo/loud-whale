@@ -39,8 +39,12 @@ class _ThreadScreenState extends State<ThreadScreen> {
                     builder: (context, snapshot) {
                       final status = snapshot.data;
                       if (status != null) {
-                      return StatusCardContainer(StatusCard(status));
-
+                        return Container(
+                            decoration: BoxDecoration(
+                              color:
+                                  Theme.of(context).hintColor.withOpacity(0.03),
+                            ),
+                            child: StatusCardContainer(StatusCard(status)));
                       }
                       return Text("no data");
                     })),
@@ -53,16 +57,14 @@ class _ThreadScreenState extends State<ThreadScreen> {
                 builder: (context, snapshot) {
                   final statuses = snapshot.data!;
 
-                  return SliverList(delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final status = statuses![index];
-                      if (status != null) {
+                  return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                    final status = statuses![index];
+                    if (status != null) {
                       return StatusCardContainer(StatusCard(status!));
-
-                      }
-                      return Text("no data");
-                    }, childCount: statuses.length
-                  ));
+                    }
+                    return Text("no data");
+                  }, childCount: statuses.length));
                 })
           ],
         ));
