@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
+import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/screens/start_screen.dart';
@@ -10,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'base/database.dart';
 import 'base/keys.dart';
 import 'base/routes.dart';
+import 'base/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +37,11 @@ void main() async {
             accountDao: database.accountDao,
             attachmentDao: database.attachmentDao),
       ),
+      ChangeNotifierProvider(
+        create: (context) => ComposeProvider(
+          statusDao: database.statusDao,
+        ),
+      ),
       ChangeNotifierProvider(create: (context) => HomeProvider())
     ],
     child: MastodonApp(),
@@ -49,7 +56,7 @@ class MastodonApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: AppTheme.purple,
           appBarTheme: AppBarTheme(
             elevation: 0,
           )),

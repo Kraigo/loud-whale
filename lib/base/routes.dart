@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/screens/home_screen.dart';
 import 'package:mastodon/screens/login_screen.dart';
+import 'package:mastodon/screens/logout_screen.dart';
 import 'package:mastodon/screens/profile_screen.dart';
 import 'package:mastodon/screens/start_screen.dart';
 import 'package:mastodon/screens/thread_screen.dart';
@@ -11,6 +12,7 @@ class Routes {
   static const home = '/home';
   static const timeline = '/timeline';
   static const login = '/login';
+  static const logout = '/logout';
   static const thread = '/thread';
   static const profile = '/profile';
 
@@ -25,6 +27,7 @@ class Routes {
       Routes.start: (context) => const StartScreen(),
       Routes.home: (context) => const HomeScreen(),
       Routes.login: (context) => const LoginScreen(),
+      Routes.logout: (context) => const LogoutScreen(),
       Routes.timeline: (context) => const TimelineScreen(),
       Routes.thread: (context) =>
           ThreadScreen(statusId: pageArguments?['statusId']),

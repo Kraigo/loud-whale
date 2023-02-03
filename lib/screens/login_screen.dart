@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
           token: token.accessToken,
           instance: instanceName,
         ));
-        await router.pushNamed(Routes.timeline);
+        await router.pushNamed(Routes.start);
       }
     }
   }

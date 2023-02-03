@@ -8,4 +8,9 @@ class HomeProvider extends ChangeNotifier {
     _selectedIndex = index;
     notifyListeners();
   }
+
+  openHome() {
+    _selectedIndex = 0;
+    notifyListeners();
+  }
 }

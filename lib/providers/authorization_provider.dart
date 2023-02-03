@@ -89,6 +89,7 @@ class AuthorizationProvider extends ChangeNotifier {
           queryParameters: {
             'response_type': 'code',
             'client_id': clientId,
+            'scope': "read write follow",
             'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob'
           });
 
@@ -117,6 +118,7 @@ class AuthorizationProvider extends ChangeNotifier {
       "grant_type": "authorization_code",
       "client_id": clientId,
       "client_secret": clientSecret,
+      "scope": "read write follow",
       "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
     };
     
@@ -128,6 +130,5 @@ class AuthorizationProvider extends ChangeNotifier {
     } else {
       throw Exception('Failed to load album');
     }
-
   }
 }
