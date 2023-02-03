@@ -180,7 +180,7 @@ class _$StatusDao extends StatusDao {
   @override
   Future<List<StatusEntity>> findAllStatuses() async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses WHERE isReblogged IS false ORDER BY createdAt DESC',
+        'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -218,6 +218,88 @@ class _$StatusDao extends StatusDao {
   @override
   Stream<StatusEntity?> findStatusById(String id) {
     return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['account_id'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Stream<List<StatusEntity?>> findStatusReplies(String id) {
+    return _queryAdapter.queryListStream(
+        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['account_id'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Stream<StatusEntity?> findStatusReplied(String id) {
+    return _queryAdapter.queryStream(
+        'SELECT * FROM statuses WHERE inReplyTo = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,

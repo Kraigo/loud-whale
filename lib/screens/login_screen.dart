@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     instanceTextController = TextEditingController(text: 'mstdn.social');
-    Future.microtask(_checkAuthorization);
     super.initState();
   }
 
@@ -27,17 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     instanceTextController.dispose();
     super.dispose();
-  }
-
-  _checkAuthorization() async {
-    final authorizationProvider = context.read<AuthorizationProvider>();
-    final router = Navigator.of(context);
-
-    await authorizationProvider.checkAuthorization();
-
-    if (authorizationProvider.isAuthorized) {
-      await router.pushNamed(Routes.timeline);
-    }
   }
 
   _onLogin() async {

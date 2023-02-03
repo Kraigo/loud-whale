@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/enties/entries.dart';
+import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:provider/provider.dart';
 
 import 'widgets.dart';
 
@@ -24,7 +26,9 @@ class StatusCardActions extends StatelessWidget {
           label: status.reblogsCount > 0 ? '${status.reblogsCount}' : '',
         ),
         ActionButton(
-          onPressed: () {},
+          onPressed: () async {
+            await context.read<TimelineProvider>().favoriteStatus(status.id);
+          },
           icon: status.isFavourited == true ? Icons.star : Icons.star_border,
           isActivated: status.isFavourited,
           label: status.favouritesCount > 0 ? '${status.favouritesCount}' : '',

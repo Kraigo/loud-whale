@@ -26,7 +26,7 @@ class TimelineProvider extends ChangeNotifier {
   Stream<AccountEntity?> getAccountById(String id) {
     return accountDao.findAccountById(id);
   }
-  
+
   Stream<List<AttachmentEntity>> getAttachmentsByStatus(String statusId) {
     return attachmentDao.findAttachemntsByStatus(statusId);
   }
@@ -57,18 +57,30 @@ class TimelineProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
+      final resp = await MastodonHelper.api?.v1.statuses
+          .lookupStatusContext(statusId: statusId);
       if (resp != null) {
-        for (var s in resp.data) {
+        for (var s in resp.data.ancestors) {
           await _saveStatus(s);
-          if (s.reblog != null) {
-            await _saveStatus(s.reblog!);
-          }
         }
-        _statuses = await statusDao.findAllStatuses();
+        for (var s in resp.data.descendants) {
+          await _saveStatus(s);
+        }
       }
     } finally {
       _loading = false;
+      notifyListeners();
+    }
+  }
+
+  favoriteStatus(String statusId) async {
+    try {
+      final resp = await MastodonHelper.api?.v1.statuses
+          .createFavourite(statusId: statusId);
+      if (resp != null) {
+        await _saveStatus(resp.data);
+      }
+    } finally {
       notifyListeners();
     }
   }

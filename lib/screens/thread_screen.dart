@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/status_entity.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 class ThreadScreen extends StatefulWidget {
@@ -13,7 +14,6 @@ class ThreadScreen extends StatefulWidget {
 }
 
 class _ThreadScreenState extends State<ThreadScreen> {
-
   @override
   void initState() {
     Future.microtask(_loadInitial);
@@ -21,7 +21,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
   }
 
   _loadInitial() async {
-    context.read<TimelineProvider>().loadTimeline();
+    context.read<TimelineProvider>().loadThread(widget.statusId);
   }
 
   @override
@@ -38,8 +38,32 @@ class _ThreadScreenState extends State<ThreadScreen> {
                         .findStatusById(widget.statusId),
                     builder: (context, snapshot) {
                       final status = snapshot.data;
-                      return _ThreadCard(status);
+                      if (status != null) {
+                      return StatusCardContainer(StatusCard(status));
+
+                      }
+                      return Text("no data");
                     })),
+            StreamBuilder(
+                stream: context
+                    .read<AppDatabase>()
+                    .statusDao
+                    .findStatusReplies(widget.statusId),
+                initialData: [],
+                builder: (context, snapshot) {
+                  final statuses = snapshot.data!;
+
+                  return SliverList(delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final status = statuses![index];
+                      if (status != null) {
+                      return StatusCardContainer(StatusCard(status!));
+
+                      }
+                      return Text("no data");
+                    }, childCount: statuses.length
+                  ));
+                })
           ],
         ));
   }

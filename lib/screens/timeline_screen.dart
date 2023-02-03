@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:mastodon/providers/timeline_provider.dart';
@@ -65,13 +66,13 @@ class _TimelineList extends StatelessWidget {
         if (item.reblogId != null) {
           final reblog = timelineProvider.getStatusById(item.reblogId!);
           if (reblog != null) {
-            return _ListItemContainer(StatusCard(
+            return StatusCardContainer(StatusCard(
               reblog,
               reblog: item,
             ));
           }
         }
-        return _ListItemContainer(
+        return StatusCardContainer(
           StatusCard(item),
         );
       },
@@ -93,21 +94,5 @@ class _TimelineLoading extends StatelessWidget {
       return LinearProgressIndicator();
     }
     return Container();
-  }
-}
-
-class _ListItemContainer extends StatelessWidget {
-  final Widget child;
-  const _ListItemContainer(this.child, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    return UnconstrainedBox(
-      child: Flexible(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: child,
-        ),
-      ),
-    );
   }
 }

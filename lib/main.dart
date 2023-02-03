@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:mastodon/screens/start_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'base/database.dart';
@@ -50,7 +51,8 @@ class MastodonApp extends StatelessWidget {
       ),
       navigatorKey: AppKeys.navigatorKey,
       onGenerateRoute: Routes.onGenerateRoute,
-      initialRoute: Routes.login,
+      // initialRoute: Routes.login,
+      home: const StartScreen(),
     );
   }
 }
