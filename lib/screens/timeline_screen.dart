@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
+import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:mastodon/providers/timeline_provider.dart';
 
-class TimelineScreen extends StatefulWidget{
+class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
 
   @override
@@ -49,41 +51,31 @@ class _TimelineList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timelineProvider = context.watch<TimelineProvider>();
-    final statuses = timelineProvider.statuses;
+    return StreamBuilder<List<StatusEntity>>(
+        initialData: const [],
+        stream: context.read<AppDatabase>().statusDao.findAllStatuses(),
+        builder: (context, snapshot) {
+          final statuses = snapshot.data!;
+          return ListView.separated(
+            // shrinkWrap: true,
+            itemBuilder: (context, index) {
+              final item = statuses[index];
 
-    // return StreamBuilder(
-    //   stream: context.read<AppDatabase>().statusDao.findAllStatuses()
-    //   builder: (context, (context, snapshot) {
-      
-    // }));
-    return ListView.separated(
-      itemBuilder: (context, index) {
-        final item = statuses[index];
+              if (item.reblogId != null) {
+                return StatusCardContainer(StatusCardStream(
+                  statusId: item.reblogId!,
+                  reblog: item,
+                ));
+              }
 
-        // return StreamBuilder(
-        //   timelineProvider.
-        //   builder:(context, snapshot) {
-        //     StatusCard(item, reblog: snapshot.data,)
-        //   },);
-        if (item.reblogId != null) {
-          final reblog = timelineProvider.getStatusById(item.reblogId!);
-          if (reblog != null) {
-            return StatusCardContainer(StatusCard(
-              reblog,
-              reblog: item,
-            ));
-          }
-        }
-        return StatusCardContainer(
-          StatusCard(item),
-        );
-      },
-      separatorBuilder: ((context, index) {
-        return Divider();
-      }),
-      itemCount: statuses.length,
-    );
+              return StatusCardContainer(StatusCard(item));
+            },
+            separatorBuilder: ((context, index) {
+              return Divider();
+            }),
+            itemCount: statuses.length,
+          );
+        });
   }
 }
 

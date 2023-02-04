@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/widgets/widgets.dart';
+import 'package:provider/provider.dart';
 
 class StatusCard extends StatelessWidget {
   final StatusEntity status;
@@ -46,6 +48,30 @@ class StatusCard extends StatelessWidget {
         ),
         StatusCardActions(status)
       ]),
+    );
+  }
+}
+
+class StatusCardStream extends StatelessWidget {
+  final String statusId;
+  final StatusEntity? reblog;
+  const StatusCardStream({required this.statusId, this.reblog, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: context.read<AppDatabase>().statusDao.findStatusById(statusId),
+      builder: (context, snapshot) {
+        final status = snapshot.data;
+        if (status == null) {
+          return Container();
+        }
+
+        return StatusCard(
+          status,
+          reblog: reblog,
+        );
+      },
     );
   }
 }

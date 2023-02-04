@@ -69,6 +69,8 @@ class _$AppDatabase extends AppDatabase {
 
   AttachmentDao? _attachmentDaoInstance;
 
+  TimelineDao? _timelineDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -124,6 +126,11 @@ class _$AppDatabase extends AppDatabase {
   AttachmentDao get attachmentDao {
     return _attachmentDaoInstance ??= _$AttachmentDao(database, changeListener);
   }
+
+  @override
+  TimelineDao get timelineDao {
+    return _timelineDaoInstance ??= _$TimelineDao(database, changeListener);
+  }
 }
 
 class _$StatusDao extends StatusDao {
@@ -178,8 +185,8 @@ class _$StatusDao extends StatusDao {
   final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
 
   @override
-  Future<List<StatusEntity>> findAllStatuses() async {
-    return _queryAdapter.queryList(
+  Stream<List<StatusEntity>> findAllStatuses() {
+    return _queryAdapter.queryListStream(
         'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
@@ -212,7 +219,9 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['account_id'] as String));
+            accountId: row['account_id'] as String),
+        queryableName: 'statuses',
+        isView: false);
   }
 
   @override
@@ -342,6 +351,12 @@ class _$StatusDao extends StatusDao {
     await _statusEntityInsertionAdapter.insert(
         status, OnConflictStrategy.replace);
   }
+
+  @override
+  Future<void> insertStatuses(List<StatusEntity> statuses) async {
+    await _statusEntityInsertionAdapter.insertList(
+        statuses, OnConflictStrategy.replace);
+  }
 }
 
 class _$SettingDao extends SettingDao {
@@ -349,10 +364,10 @@ class _$SettingDao extends SettingDao {
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database),
-        _settingInsertionAdapter = InsertionAdapter(
+        _settingEntityInsertionAdapter = InsertionAdapter(
             database,
             'settings',
-            (Setting item) =>
+            (SettingEntity item) =>
                 <String, Object?>{'name': item.name, 'value': item.value});
 
   final sqflite.DatabaseExecutor database;
@@ -361,20 +376,20 @@ class _$SettingDao extends SettingDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<Setting> _settingInsertionAdapter;
+  final InsertionAdapter<SettingEntity> _settingEntityInsertionAdapter;
 
   @override
-  Future<List<Setting>> findAllSettings() async {
+  Future<List<SettingEntity>> findAllSettings() async {
     return _queryAdapter.queryList('SELECT * FROM settings',
-        mapper: (Map<String, Object?> row) => Setting(
+        mapper: (Map<String, Object?> row) => SettingEntity(
             name: row['name'] as String, value: row['value'] as String));
   }
 
   @override
-  Future<Setting?> findSettingByName(String name) async {
+  Future<SettingEntity?> findSettingByName(String name) async {
     return _queryAdapter.query('SELECT * FROM settings WHERE name = ?1',
-        mapper: (Map<String, Object?> row) =>
-            Setting(name: row['name'] as String, value: row['value'] as String),
+        mapper: (Map<String, Object?> row) => SettingEntity(
+            name: row['name'] as String, value: row['value'] as String),
         arguments: [name]);
   }
 
@@ -385,8 +400,9 @@ class _$SettingDao extends SettingDao {
   }
 
   @override
-  Future<void> insertSetting(Setting setting) async {
-    await _settingInsertionAdapter.insert(setting, OnConflictStrategy.replace);
+  Future<void> insertSetting(SettingEntity setting) async {
+    await _settingEntityInsertionAdapter.insert(
+        setting, OnConflictStrategy.replace);
   }
 }
 
@@ -474,9 +490,40 @@ class _$AccountDao extends AccountDao {
   }
 
   @override
+  Stream<AccountEntity?> findCurrentAccount() {
+    return _queryAdapter.queryStream(
+        'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
+        queryableName: 'accounts',
+        isView: false);
+  }
+
+  @override
   Future<void> insertAccount(AccountEntity account) async {
     await _accountEntityInsertionAdapter.insert(
         account, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAccounts(List<AccountEntity> accounts) async {
+    await _accountEntityInsertionAdapter.insertList(
+        accounts, OnConflictStrategy.replace);
   }
 }
 
@@ -544,6 +591,132 @@ class _$AttachmentDao extends AttachmentDao {
   Future<void> insertAttachment(AttachmentEntity attachment) async {
     await _attachmentEntityInsertionAdapter.insert(
         attachment, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAttachments(List<AttachmentEntity> attachments) async {
+    await _attachmentEntityInsertionAdapter.insertList(
+        attachments, OnConflictStrategy.replace);
+  }
+}
+
+class _$TimelineDao extends TimelineDao {
+  _$TimelineDao(
+    this.database,
+    this.changeListener,
+  )   : _statusEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'statuses',
+            (StatusEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'url': item.url,
+                  'uri': item.uri,
+                  'content': item.content,
+                  'spoilerText': item.spoilerText,
+                  'visibility': item.visibility,
+                  'favouritesCount': item.favouritesCount,
+                  'repliesCount': item.repliesCount,
+                  'reblogsCount': item.reblogsCount,
+                  'language': item.language,
+                  'inReplyToId': item.inReplyToId,
+                  'inReplyToAccountId': item.inReplyToAccountId,
+                  'isFavourited': item.isFavourited == null
+                      ? null
+                      : (item.isFavourited! ? 1 : 0),
+                  'isReblogged': item.isReblogged == null
+                      ? null
+                      : (item.isReblogged! ? 1 : 0),
+                  'isMuted':
+                      item.isMuted == null ? null : (item.isMuted! ? 1 : 0),
+                  'isBookmarked': item.isBookmarked == null
+                      ? null
+                      : (item.isBookmarked! ? 1 : 0),
+                  'isSensitive': item.isSensitive == null
+                      ? null
+                      : (item.isSensitive! ? 1 : 0),
+                  'isPinned':
+                      item.isPinned == null ? null : (item.isPinned! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt),
+                  'reblogId': item.reblogId,
+                  'account_id': item.accountId
+                },
+            changeListener),
+        _attachmentEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'attachments',
+            (AttachmentEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'status_id': item.statusId,
+                  'type': item.type,
+                  'url': item.url,
+                  'previewUrl': item.previewUrl,
+                  'remoteUrl': item.remoteUrl,
+                  'description': item.description
+                },
+            changeListener),
+        _accountEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'accounts',
+            (AccountEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'username': item.username,
+                  'displayName': item.displayName,
+                  'acct': item.acct,
+                  'note': item.note,
+                  'url': item.url,
+                  'avatar': item.avatar,
+                  'avatarStatic': item.avatarStatic,
+                  'header': item.header,
+                  'headerStatic': item.headerStatic,
+                  'followersCount': item.followersCount,
+                  'followingCount': item.followingCount,
+                  'subscribingCount': item.subscribingCount,
+                  'statusesCount': item.statusesCount,
+                  'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
+
+  final InsertionAdapter<AttachmentEntity> _attachmentEntityInsertionAdapter;
+
+  final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
+
+  @override
+  Future<void> insertStatuses(List<StatusEntity> statuses) async {
+    await _statusEntityInsertionAdapter.insertList(
+        statuses, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAttachments(List<AttachmentEntity> attachments) async {
+    await _attachmentEntityInsertionAdapter.insertList(
+        attachments, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAccounts(List<AccountEntity> accounts) async {
+    await _accountEntityInsertionAdapter.insertList(
+        accounts, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> saveTimelineStatues(List<Status> statuses) async {
+    if (database is sqflite.Transaction) {
+      await super.saveTimelineStatues(statuses);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.timelineDao.saveTimelineStatues(statuses);
+      });
+    }
   }
 }
 

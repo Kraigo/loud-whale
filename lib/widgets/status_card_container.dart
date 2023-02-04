@@ -6,11 +6,9 @@ class StatusCardContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return UnconstrainedBox(
-      child: Flexible(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: child,
-        ),
+      child: LimitedBox(
+        maxWidth: 600,
+        child: child
       ),
     );
   }

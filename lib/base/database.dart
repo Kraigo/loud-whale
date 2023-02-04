@@ -4,15 +4,17 @@ import 'package:floor/floor.dart';
 import 'package:mastodon/dao/account_dao.dart';
 import 'package:mastodon/dao/attachment_dao.dart';
 import 'package:mastodon/dao/setting_dao.dart';
-import 'package:mastodon/enties/setting_model.dart';
+import 'package:mastodon/dao/timeline_dao.dart';
+import 'package:mastodon/dao/timeline_dao.dart';
+import 'package:mastodon/dao/timeline_dao.dart';
 import 'package:mastodon/helpers/datetime_converter.dart';
+import 'package:mastodon_api/mastodon_api.dart';
 // ignore: depend_on_referenced_packages
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import 'package:mastodon/dao/status_dao.dart';
 import 'package:mastodon/enties/entries.dart';
 
-import '../enties/attachment_entity.dart';
 
 part 'database.g.dart';
 
@@ -22,7 +24,7 @@ part 'database.g.dart';
   entities: [
     AccountEntity,
     StatusEntity,
-    Setting,
+    SettingEntity,
     AttachmentEntity,
   ],
 )
@@ -31,4 +33,5 @@ abstract class AppDatabase extends FloorDatabase {
   SettingDao get settingDao;
   AccountDao get accountDao;
   AttachmentDao get attachmentDao;
+  TimelineDao get timelineDao;
 }

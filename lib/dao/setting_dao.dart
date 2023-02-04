@@ -1,16 +1,16 @@
 import 'package:floor/floor.dart';
-import 'package:mastodon/enties/setting_model.dart';
+import 'package:mastodon/enties/setting_entity.dart';
 
 @dao
 abstract class SettingDao {
   @Query('SELECT * FROM settings')
-  Future<List<Setting>> findAllSettings();
+  Future<List<SettingEntity>> findAllSettings();
 
   @Query('SELECT * FROM settings WHERE name = :name')
-  Future<Setting?> findSettingByName(String name);
+  Future<SettingEntity?> findSettingByName(String name);
 
   @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> insertSetting(Setting setting);
+  Future<void> insertSetting(SettingEntity setting);
 
   @Query('DELETE FROM settings WHERE name = :name')
   Future<void> removeSettingByName(String name);

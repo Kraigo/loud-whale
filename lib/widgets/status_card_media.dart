@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/entries.dart';
-import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:provider/provider.dart';
 
 class StatusCardMedia extends StatelessWidget {
@@ -10,8 +10,10 @@ class StatusCardMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream:
-          context.read<TimelineProvider>().getAttachmentsByStatus(status.id),
+      stream: context
+          .read<AppDatabase>()
+          .attachmentDao
+          .findAttachemntsByStatus(status.id),
       builder: (context, snapshot) {
         if (snapshot.data == null) {
           return Container();

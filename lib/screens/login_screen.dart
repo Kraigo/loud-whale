@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
           token: token.accessToken,
           instance: instanceName,
         ));
+        await authorizationProvider.verifyAccount();
         await router.pushNamed(Routes.start);
       }
     }

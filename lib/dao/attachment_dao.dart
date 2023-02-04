@@ -12,4 +12,7 @@ abstract class AttachmentDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertAttachment(AttachmentEntity attachment);
+
+  @Insert(onConflict: OnConflictStrategy.replace)
+  Future<void> insertAttachments(List<AttachmentEntity> attachments);
 }

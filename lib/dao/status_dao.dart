@@ -8,7 +8,7 @@ abstract class StatusDao {
   WHERE isReblogged IS false AND inReplyToId IS NULL
   ORDER BY createdAt DESC
   ''')
-  Future<List<StatusEntity>> findAllStatuses();
+  Stream<List<StatusEntity>> findAllStatuses();
 
   @Query('SELECT * FROM statuses WHERE id = :id')
   Stream<StatusEntity?> findStatusById(String id);
@@ -40,4 +40,7 @@ abstract class StatusDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertStatus(StatusEntity status);
+
+  @Insert(onConflict: OnConflictStrategy.replace)
+  Future<void> insertStatuses(List<StatusEntity> statuses);
 }

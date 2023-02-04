@@ -29,13 +29,16 @@ void main() async {
           clientId: dotenv.get('MASTODON_CLIENT_ID'),
           clientSecret: dotenv.get('MASTODON_CLIENT_SECRET'),
           settingDao: database.settingDao,
+          accountDao: database.accountDao,
         ),
       ),
       ChangeNotifierProvider(
         create: (context) => TimelineProvider(
-            statusDao: database.statusDao,
-            accountDao: database.accountDao,
-            attachmentDao: database.attachmentDao),
+          statusDao: database.statusDao,
+          accountDao: database.accountDao,
+          attachmentDao: database.attachmentDao,
+          timelineDao: database.timelineDao,
+        ),
       ),
       ChangeNotifierProvider(
         create: (context) => ComposeProvider(

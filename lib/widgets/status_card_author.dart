@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
@@ -20,8 +21,10 @@ class StatusCardAuthor extends StatelessWidget {
     return GestureDetector(
       onTap: () => _openProfile(context),
       child: StreamBuilder(
-          stream:
-              context.read<TimelineProvider>().getAccountById(status.accountId),
+          stream: context
+              .read<AppDatabase>()
+              .accountDao
+              .findAccountById(status.accountId),
           builder: (context, snapshot) {
             final account = snapshot.data;
 
@@ -69,8 +72,10 @@ class StatusCardReblogged extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream:
-            context.read<TimelineProvider>().getAccountById(status.accountId),
+        stream: context
+            .read<AppDatabase>()
+            .accountDao
+            .findAccountById(status.accountId),
         builder: (context, snapshot) {
           final account = snapshot.data;
 

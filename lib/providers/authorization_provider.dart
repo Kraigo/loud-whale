@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/store_key.dart';
+import 'package:mastodon/dao/account_dao.dart';
 
 import 'package:mastodon/dao/setting_dao.dart';
-import 'package:mastodon/enties/setting_model.dart';
+import 'package:mastodon/enties/account_entity.dart';
+import 'package:mastodon/enties/setting_entity.dart';
 import 'package:mastodon/helpers/mastodon_helper.dart';
-import 'package:mastodon_api/mastodon_api.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/access_token_response.dart';
-
-enum StorageKeys {
-  accessToken('accessToken'),
-  instanceName('instanceName');
-
-  const StorageKeys(this.storageKey);
-  final String storageKey;
-}
-
 
 class Authorization {
   final String token;
@@ -32,23 +25,30 @@ class AuthorizationProvider extends ChangeNotifier {
   final String clientId;
   final String clientSecret;
   final SettingDao settingDao;
+  final AccountDao accountDao;
   bool _isAuthorized = false;
   bool get isAuthorized => _isAuthorized;
-  
+
   bool _loading = false;
   bool get loading => _loading;
 
   AuthorizationProvider({
     required this.clientId,
     required this.clientSecret,
+    required this.accountDao,
     required this.settingDao,
   });
 
   Future<Authorization> getAuthorization() async {
     return Authorization(
-      token: (await settingDao.findSettingByName(StorageKeys.accessToken.storageKey))?.value ?? '', 
-      instance: (await settingDao.findSettingByName(StorageKeys.instanceName.storageKey))?.value ?? ''
-    );
+        token: (await settingDao
+                    .findSettingByName(StorageKeys.accessToken.storageKey))
+                ?.value ??
+            '',
+        instance: (await settingDao
+                    .findSettingByName(StorageKeys.instanceName.storageKey))
+                ?.value ??
+            '');
   }
 
   Future checkAuthorization() async {
@@ -64,8 +64,10 @@ class AuthorizationProvider extends ChangeNotifier {
   Future setAuthorization(Authorization auth) async {
     MastodonHelper.init(instance: auth.instance, token: auth.token);
 
-    await settingDao.insertSetting(Setting(name: StorageKeys.instanceName.storageKey, value: auth.instance));
-    await settingDao.insertSetting(Setting(name: StorageKeys.accessToken.storageKey, value: auth.token));
+    await settingDao.insertSetting(SettingEntity(
+        name: StorageKeys.instanceName.storageKey, value: auth.instance));
+    await settingDao.insertSetting(
+        SettingEntity(name: StorageKeys.accessToken.storageKey, value: auth.token));
     await checkAuthorization();
   }
 
@@ -96,11 +98,9 @@ class AuthorizationProvider extends ChangeNotifier {
       if (!await launchUrl(url)) {
         throw 'Could not launch ${url.toString()}';
       }
-      
     } catch (e) {
       debugPrint(e.toString());
-    }
-    finally {
+    } finally {
       _loading = false;
       notifyListeners();
     }
@@ -108,9 +108,9 @@ class AuthorizationProvider extends ChangeNotifier {
 
   Future<AccessTokenResponse?> getToken(String instance, String code) async {
     final url = Uri(
-          scheme: 'https',
-          host: instance,
-          path: '/oauth/token',
+      scheme: 'https',
+      host: instance,
+      path: '/oauth/token',
     );
 
     final Map<String, String> body = {
@@ -121,14 +121,25 @@ class AuthorizationProvider extends ChangeNotifier {
       "scope": "read write follow",
       "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
     };
-    
-    final response = await http
-        .post(url, body: body);
+
+    final response = await http.post(url, body: body);
 
     if (response.statusCode == 200) {
       return AccessTokenResponse.fromJson(response.body);
     } else {
       throw Exception('Failed to load album');
     }
+  }
+
+  verifyAccount() async {
+    try {
+      final resp =
+          await MastodonHelper.api?.v1.accounts.verifyAccountCredentials();
+      if (resp != null) {
+        await accountDao.insertAccount(AccountEntity.fromModel(resp.data));
+        await settingDao.insertSetting(
+            SettingEntity(name: StorageKeys.userId.storageKey, value: resp.data.id));
+      }
+    } catch (_) {}
   }
 }
