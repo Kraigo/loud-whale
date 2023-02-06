@@ -275,85 +275,19 @@ class _$StatusDao extends StatusDao {
   }
 
   @override
-  Stream<List<StatusEntity?>> findStatusReplies(String id) {
-    return _queryAdapter.queryListStream(
+  Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
+    return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(
-            id: row['id'] as String,
-            url: row['url'] as String?,
-            uri: row['uri'] as String,
-            content: row['content'] as String,
-            spoilerText: row['spoilerText'] as String,
-            visibility: row['visibility'] as String,
-            favouritesCount: row['favouritesCount'] as int,
-            repliesCount: row['repliesCount'] as int,
-            reblogsCount: row['reblogsCount'] as int,
-            language: row['language'] as String?,
-            inReplyToId: row['inReplyToId'] as String?,
-            inReplyToAccountId: row['inReplyToAccountId'] as String?,
-            isFavourited: row['isFavourited'] == null
-                ? null
-                : (row['isFavourited'] as int) != 0,
-            isReblogged: row['isReblogged'] == null
-                ? null
-                : (row['isReblogged'] as int) != 0,
-            isMuted:
-                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
-            isBookmarked: row['isBookmarked'] == null
-                ? null
-                : (row['isBookmarked'] as int) != 0,
-            isSensitive: row['isSensitive'] == null
-                ? null
-                : (row['isSensitive'] as int) != 0,
-            isPinned:
-                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
-            reblogId: row['reblogId'] as String?,
-            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [id]);
   }
 
   @override
-  Stream<List<StatusEntity?>> findStatusRepliesBefore(String id) {
-    return _queryAdapter.queryListStream(
+  Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
+    return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(
-            id: row['id'] as String,
-            url: row['url'] as String?,
-            uri: row['uri'] as String,
-            content: row['content'] as String,
-            spoilerText: row['spoilerText'] as String,
-            visibility: row['visibility'] as String,
-            favouritesCount: row['favouritesCount'] as int,
-            repliesCount: row['repliesCount'] as int,
-            reblogsCount: row['reblogsCount'] as int,
-            language: row['language'] as String?,
-            inReplyToId: row['inReplyToId'] as String?,
-            inReplyToAccountId: row['inReplyToAccountId'] as String?,
-            isFavourited: row['isFavourited'] == null
-                ? null
-                : (row['isFavourited'] as int) != 0,
-            isReblogged: row['isReblogged'] == null
-                ? null
-                : (row['isReblogged'] as int) != 0,
-            isMuted:
-                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
-            isBookmarked: row['isBookmarked'] == null
-                ? null
-                : (row['isBookmarked'] as int) != 0,
-            isSensitive: row['isSensitive'] == null
-                ? null
-                : (row['isSensitive'] as int) != 0,
-            isPinned:
-                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
-            reblogId: row['reblogId'] as String?,
-            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [id]);
   }
 
   @override
@@ -655,7 +589,8 @@ class _$TimelineDao extends TimelineDao {
   _$TimelineDao(
     this.database,
     this.changeListener,
-  )   : _statusEntityInsertionAdapter = InsertionAdapter(
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _statusEntityInsertionAdapter = InsertionAdapter(
             database,
             'statuses',
             (StatusEntity item) => <String, Object?>{
@@ -692,19 +627,6 @@ class _$TimelineDao extends TimelineDao {
                   'accountId': item.accountId
                 },
             changeListener),
-        _attachmentEntityInsertionAdapter = InsertionAdapter(
-            database,
-            'attachments',
-            (AttachmentEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'statusId': item.statusId,
-                  'type': item.type,
-                  'url': item.url,
-                  'previewUrl': item.previewUrl,
-                  'remoteUrl': item.remoteUrl,
-                  'description': item.description
-                },
-            changeListener),
         _accountEntityInsertionAdapter = InsertionAdapter(
             database,
             'accounts',
@@ -726,22 +648,330 @@ class _$TimelineDao extends TimelineDao {
                   'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
                   'createdAt': _dateTimeConverter.encode(item.createdAt)
                 },
+            changeListener),
+        _attachmentEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'attachments',
+            (AttachmentEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'statusId': item.statusId,
+                  'type': item.type,
+                  'url': item.url,
+                  'previewUrl': item.previewUrl,
+                  'remoteUrl': item.remoteUrl,
+                  'description': item.description
+                },
+            changeListener),
+        _notificationEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'notifications',
+            (NotificationEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'type': item.type,
+                  'createdAt': _dateTimeConverter.encode(item.createdAt),
+                  'accountId': item.accountId,
+                  'statusId': item.statusId
+                },
             changeListener);
 
   final sqflite.DatabaseExecutor database;
 
   final StreamController<String> changeListener;
 
+  final QueryAdapter _queryAdapter;
+
   final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
+
+  final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
 
   final InsertionAdapter<AttachmentEntity> _attachmentEntityInsertionAdapter;
 
-  final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
+  final InsertionAdapter<NotificationEntity>
+      _notificationEntityInsertionAdapter;
+
+  @override
+  Stream<List<StatusEntity>> findAllStatuses() {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String),
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Stream<StatusEntity?> findStatusById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
+    return _queryAdapter.queryList(
+        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
+    return _queryAdapter.queryList(
+        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Stream<StatusEntity?> findStatusReplied(String id) {
+    return _queryAdapter.queryStream(
+        'SELECT * FROM statuses WHERE inReplyTo = ?1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Future<List<AccountEntity>> findAllAccountes() async {
+    return _queryAdapter.queryList('SELECT * FROM accounts',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)));
+  }
+
+  @override
+  Stream<AccountEntity?> findAccountById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM accounts WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
+        arguments: [id],
+        queryableName: 'accounts',
+        isView: false);
+  }
+
+  @override
+  Stream<AccountEntity?> findCurrentAccount() {
+    return _queryAdapter.queryStream(
+        'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
+        queryableName: 'accounts',
+        isView: false);
+  }
+
+  @override
+  Stream<AttachmentEntity?> findAttachmentById(String id) {
+    return _queryAdapter.queryStream('SELECT * FROM attachments WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AttachmentEntity(
+            statusId: row['statusId'] as String,
+            id: row['id'] as String,
+            type: row['type'] as int,
+            url: row['url'] as String,
+            previewUrl: row['previewUrl'] as String,
+            remoteUrl: row['remoteUrl'] as String?,
+            description: row['description'] as String?),
+        arguments: [id],
+        queryableName: 'attachments',
+        isView: false);
+  }
+
+  @override
+  Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM attachments WHERE statusId = ?1',
+        mapper: (Map<String, Object?> row) => AttachmentEntity(
+            statusId: row['statusId'] as String,
+            id: row['id'] as String,
+            type: row['type'] as int,
+            url: row['url'] as String,
+            previewUrl: row['previewUrl'] as String,
+            remoteUrl: row['remoteUrl'] as String?,
+            description: row['description'] as String?),
+        arguments: [statusId],
+        queryableName: 'attachments',
+        isView: false);
+  }
+
+  @override
+  Stream<List<NotificationEntity>> findAllNotifications() {
+    return _queryAdapter.queryListStream('SELECT * FROM notifications',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?),
+        queryableName: 'notifications',
+        isView: false);
+  }
+
+  @override
+  Future<void> insertStatus(StatusEntity status) async {
+    await _statusEntityInsertionAdapter.insert(
+        status, OnConflictStrategy.replace);
+  }
 
   @override
   Future<void> insertStatuses(List<StatusEntity> statuses) async {
     await _statusEntityInsertionAdapter.insertList(
         statuses, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAccount(AccountEntity account) async {
+    await _accountEntityInsertionAdapter.insert(
+        account, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAccounts(List<AccountEntity> accounts) async {
+    await _accountEntityInsertionAdapter.insertList(
+        accounts, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertAttachment(AttachmentEntity attachment) async {
+    await _attachmentEntityInsertionAdapter.insert(
+        attachment, OnConflictStrategy.replace);
   }
 
   @override
@@ -751,9 +981,16 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Future<void> insertAccounts(List<AccountEntity> accounts) async {
-    await _accountEntityInsertionAdapter.insertList(
-        accounts, OnConflictStrategy.replace);
+  Future<void> insertNotification(NotificationEntity notification) async {
+    await _notificationEntityInsertionAdapter.insert(
+        notification, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertNotifications(
+      List<NotificationEntity> notifications) async {
+    await _notificationEntityInsertionAdapter.insertList(
+        notifications, OnConflictStrategy.replace);
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/notifications_provider.dart';
+import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/screens/start_screen.dart';
 import 'package:mastodon/screens/home_screen.dart';
@@ -49,6 +50,12 @@ void main() async {
       ChangeNotifierProvider(
         create: (context) => NotificationsProvider(
           notificationDao: database.notificationDao,
+          timelineDao: database.timelineDao,
+        ),
+      ),
+      ChangeNotifierProvider(
+        create: (context) => ThreadProvider(
+          statusDao: database.statusDao,
           timelineDao: database.timelineDao,
         ),
       ),

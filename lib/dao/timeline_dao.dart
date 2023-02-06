@@ -1,18 +1,14 @@
 import 'package:floor/floor.dart';
+import 'package:mastodon/dao/account_dao.dart';
+import 'package:mastodon/dao/attachment_dao.dart';
+import 'package:mastodon/dao/notification_dao.dart';
+import 'package:mastodon/dao/status_dao.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon_api/mastodon_api.dart';
 
 @dao
-abstract class TimelineDao {
-  @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> insertStatuses(List<StatusEntity> statuses);
-
-  @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> insertAttachments(List<AttachmentEntity> attachments);
-
-  @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> insertAccounts(List<AccountEntity> accounts);
-
+abstract class TimelineDao
+    with StatusDao, AccountDao, AttachmentDao, NotificationDao {
   @transaction
   Future<void> saveTimelineStatuses(List<Status> statuses) async {
     List<StatusEntity> statusesEntries = [];
@@ -42,5 +38,39 @@ abstract class TimelineDao {
     await insertAccounts(accountsEntries);
     await insertStatuses(statusesEntries);
     await insertAttachments(attachmentsEntries);
+  }
+
+  Future<NotificationEntity?> populateNotification(
+    NotificationEntity? notification,
+  ) async {
+    if (notification == null) return null;
+    notification.account = await findAccountById(notification.accountId).first;
+    if (notification.statusId != null) {
+      notification.status = await findStatusById(notification.statusId!).first;
+    }
+    if (notification.status?.accountId != null) {
+      notification.status!.account =
+          await findAccountById(notification.status!.accountId).first;
+    }
+
+    return notification;
+  }
+
+  Future<StatusEntity?> populateStatus(
+    StatusEntity? status,
+  ) async {
+    if (status == null) return null;
+
+    status.account = await findAccountById(status.accountId).first;
+    if (status.reblogId != null) {
+      status.reblog = await findStatusById(status.reblogId!).first;
+    }
+    if (status.reblog?.accountId != null) {
+      status.reblog!.account =
+          await findAccountById(status.reblog!.accountId).first;
+    }
+    status.mediaAttachments = await findAttachemntsByStatus(status.id).first;
+
+    return status;
   }
 }

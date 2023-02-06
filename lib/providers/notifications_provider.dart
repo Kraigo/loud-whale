@@ -7,6 +7,8 @@ import 'package:mastodon/helpers/mastodon_helper.dart';
 class NotificationsProvider extends ChangeNotifier {
   bool _loading = false;
   bool get loading => _loading;
+  List<NotificationEntity> _notifications = [];
+  List<NotificationEntity> get notifications => _notifications;
 
   NotificationDao notificationDao;
   TimelineDao timelineDao;
@@ -33,6 +35,10 @@ class NotificationsProvider extends ChangeNotifier {
             .toList());
         await timelineDao.insertAccounts(
             resp.data.map((e) => AccountEntity.fromModel(e.account)).toList());
+
+        for (var n in _notifications) {
+          await timelineDao.populateNotification(n);
+        }
       }
     } finally {
       _loading = false;

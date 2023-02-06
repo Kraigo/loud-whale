@@ -51,31 +51,24 @@ class _TimelineList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<StatusEntity>>(
-        initialData: const [],
-        stream: context.read<AppDatabase>().statusDao.findAllStatuses(),
-        builder: (context, snapshot) {
-          final statuses = snapshot.data!;
-          return ListView.separated(
-            // shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final item = statuses[index];
+    final timelineProvider = context.watch<TimelineProvider>();
+    final statuses = timelineProvider.statuses;
+    return ListView.separated(
+      itemBuilder: (context, index) {
+        final item = statuses[index];
 
-              if (item.reblogId != null) {
-                return MiddleContainer(StatusCardStream(
-                  statusId: item.reblogId!,
-                  reblog: item,
-                ));
-              }
+        if (item.reblog != null) {
+          return MiddleContainer(StatusCard(
+            item.reblog!,
+            reblog: item,
+          ));
+        }
 
-              return MiddleContainer(StatusCard(item));
-            },
-            separatorBuilder: ((context, index) {
-              return Divider();
-            }),
-            itemCount: statuses.length,
-          );
-        });
+        return MiddleContainer(StatusCard(item));
+      },
+      separatorBuilder: ((context, index) => const Divider()),
+      itemCount: statuses.length,
+    );
   }
 }
 

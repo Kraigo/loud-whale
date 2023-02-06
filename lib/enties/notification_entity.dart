@@ -23,7 +23,11 @@ class NotificationEntity {
   final String id;
   final String type;
   final DateTime createdAt;
+  @ignore
+  AccountEntity? account;
   final String accountId;
+  @ignore
+  StatusEntity? status;
   final String? statusId;
   // Report? report;
 

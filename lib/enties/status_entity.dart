@@ -1,5 +1,6 @@
 import 'package:floor/floor.dart';
 import 'package:mastodon/enties/account_entity.dart';
+import 'package:mastodon/enties/attachment_entity.dart';
 import 'package:mastodon_api/mastodon_api.dart';
 
 @Entity(
@@ -41,8 +42,16 @@ class StatusEntity {
   // DateTime? lastStatusAt;
   DateTime createdAt;
 
+  @ignore
+  StatusEntity? reblog;
   String? reblogId;
+
+  @ignore
+  AccountEntity? account;
   String accountId;
+
+  @ignore
+  List<AttachmentEntity>? mediaAttachments;
 
   StatusEntity({
     required this.id,

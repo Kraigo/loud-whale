@@ -33,7 +33,7 @@ abstract class StatusDao {
     )
     ORDER BY createdAt ASC
   ''')
-  Stream<List<StatusEntity?>> findStatusReplies(String id);
+  Future<List<StatusEntity>> findStatusRepliesDescendants(String id);
 
   @Query('''
   WITH RECURSIVE 
@@ -56,7 +56,7 @@ abstract class StatusDao {
     )
     ORDER BY createdAt ASC
   ''')
-  Stream<List<StatusEntity?>> findStatusRepliesBefore(String id);
+  Future<List<StatusEntity>> findStatusRepliesAncestors(String id);
 
   @Query('SELECT * FROM statuses WHERE inReplyTo = :id')
   Stream<StatusEntity?> findStatusReplied(String id);

@@ -14,6 +14,10 @@ class TimelineProvider extends ChangeNotifier {
   AccountDao accountDao;
   AttachmentDao attachmentDao;
   TimelineDao timelineDao;
+
+  List<StatusEntity> _statuses = [];
+  List<StatusEntity> get statuses => _statuses;
+
   TimelineProvider({
     required this.statusDao,
     required this.accountDao,
@@ -29,25 +33,11 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
         await timelineDao.saveTimelineStatuses(resp.data);
-      }
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
 
-  Future<void> loadThread(String statusId) async {
-    _loading = true;
-    notifyListeners();
-
-    try {
-      final resp = await MastodonHelper.api?.v1.statuses
-          .lookupStatusContext(statusId: statusId);
-      if (resp != null) {
-        await timelineDao.saveTimelineStatuses([
-          ...resp.data.ancestors,
-          ...resp.data.descendants
-        ]);
+        _statuses = await statusDao.findAllStatuses().first;
+        for (var s in _statuses) {
+          await timelineDao.populateStatus(s);
+        }
       }
     } finally {
       _loading = false;
@@ -62,7 +52,7 @@ class TimelineProvider extends ChangeNotifier {
       if (resp != null) {
         await timelineDao.saveTimelineStatuses([resp.data]);
       }
-    } finally { 
+    } finally {
       notifyListeners();
     }
   }

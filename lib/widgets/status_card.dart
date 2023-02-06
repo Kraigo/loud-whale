@@ -23,9 +23,9 @@ class StatusCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(children: [
-        if (reblog != null) StatusCardReblogged(reblog!),
+        if (reblog != null) StatusCardReblogged(reblog!.account!),
         StatusCardContent(status),
-        StatusMediaStream(status.id),
+        StatusMedia(status.mediaAttachments ?? []),
         const SizedBox(
           height: 10,
         ),
@@ -51,7 +51,7 @@ class StatusCardContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            StatusCardAuthor(status),
+            StatusCardAuthor(status.account!),
             TimeAgo(status.createdAt),
           ],
         ),
@@ -69,30 +69,6 @@ class StatusCardContent extends StatelessWidget {
               }),
         ),
       ],
-    );
-  }
-}
-
-class StatusCardStream extends StatelessWidget {
-  final String statusId;
-  final StatusEntity? reblog;
-  const StatusCardStream({required this.statusId, this.reblog, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: context.read<AppDatabase>().statusDao.findStatusById(statusId),
-      builder: (context, snapshot) {
-        final status = snapshot.data;
-        if (status == null) {
-          return const StatusCardPlaceholder();
-        }
-
-        return StatusCard(
-          status,
-          reblog: reblog,
-        );
-      },
     );
   }
 }
@@ -140,112 +116,91 @@ class StatusCardActions extends StatelessWidget {
 }
 
 class StatusCardAuthor extends StatelessWidget {
-  final StatusEntity status;
-  const StatusCardAuthor(this.status, {super.key});
+  final AccountEntity account;
+  const StatusCardAuthor(this.account, {super.key});
 
   _openProfile(BuildContext context) async {
     await Navigator.of(context)
-        .pushNamed(Routes.profile, arguments: {'accountId': status.accountId});
+        .pushNamed(Routes.profile, arguments: {'accountId': account.id});
   }
 
   @override
   Widget build(BuildContext context) {
+    var displayName = 'User';
+
+    if (account?.displayName.isNotEmpty ?? false) {
+      displayName = account.displayName;
+    }
+    if (account?.displayName.isEmpty ?? false) {
+      displayName = account.username;
+    }
+
     return GestureDetector(
-      onTap: () => _openProfile(context),
-      child: StreamBuilder(
-          stream: context
-              .read<AppDatabase>()
-              .accountDao
-              .findAccountById(status.accountId),
-          builder: (context, snapshot) {
-            final account = snapshot.data;
-
-            var displayName = 'User';
-
-            if (account?.displayName.isNotEmpty ?? false) {
-              displayName = snapshot.data!.displayName;
-            }
-            if (account?.displayName.isEmpty ?? false) {
-              displayName = snapshot.data!.username;
-            }
-
-            return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  AccountAvatar(
-                    avatar: account?.avatar,
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        style: Theme.of(context).textTheme.bodyText1,
-                      ),
-                      Text(
-                        '@${account?.acct ?? ''}',
-                        style: Theme.of(context).textTheme.caption,
-                      ),
-                    ],
-                  )
-                ]);
-          }),
-    );
+        onTap: () => _openProfile(context),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          AccountAvatar(
+            avatar: account?.avatar,
+          ),
+          SizedBox(
+            width: 10,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: Theme.of(context).textTheme.bodyText1,
+              ),
+              Text(
+                '@${account?.acct ?? ''}',
+                style: Theme.of(context).textTheme.caption,
+              ),
+            ],
+          )
+        ]));
   }
 }
 
 class StatusCardReblogged extends StatelessWidget {
-  final StatusEntity status;
-  const StatusCardReblogged(this.status, {super.key});
+  final AccountEntity account;
+  const StatusCardReblogged(this.account, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: context
-            .read<AppDatabase>()
-            .accountDao
-            .findAccountById(status.accountId),
-        builder: (context, snapshot) {
-          final account = snapshot.data;
+    var displayName = 'User';
 
-          var displayName = 'User';
+    if (account?.displayName.isNotEmpty ?? false) {
+      displayName = account.displayName;
+    }
+    if (account?.displayName.isEmpty ?? false) {
+      displayName = account.username;
+    }
 
-          if (account?.displayName.isNotEmpty ?? false) {
-            displayName = snapshot.data!.displayName;
-          }
-          if (account?.displayName.isEmpty ?? false) {
-            displayName = snapshot.data!.username;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-            child: DefaultTextStyle(
-                style: Theme.of(context)
-                    .textTheme
-                    .caption!
-                    .copyWith(fontWeight: FontWeight.bold),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.repeat,
-                      size: 14,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Text(displayName),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Text("boosted")
-                  ],
-                )),
-          );
-        });
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      child: DefaultTextStyle(
+          style: Theme.of(context)
+              .textTheme
+              .caption!
+              .copyWith(fontWeight: FontWeight.bold),
+          child: Row(
+            children: [
+              Icon(
+                Icons.repeat,
+                size: 14,
+                color: Theme.of(context).hintColor,
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(displayName),
+              SizedBox(
+                width: 4,
+              ),
+              Text("boosted")
+            ],
+          )),
+    );
   }
 }
 

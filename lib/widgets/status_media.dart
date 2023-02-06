@@ -24,27 +24,6 @@ class StatusMedia extends StatelessWidget {
   }
 }
 
-class StatusMediaStream extends StatelessWidget {
-  final String statusId;
-  const StatusMediaStream(this.statusId, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: context
-            .read<AppDatabase>()
-            .attachmentDao
-            .findAttachemntsByStatus(statusId),
-        builder: (context, snapshot) {
-          if (snapshot.data == null) {
-            return const StatusMediaPlaceholder();
-          }
-
-          return StatusMedia(snapshot.data!);
-        });
-  }
-}
-
 class StatusMediaPlaceholder extends StatelessWidget {
   final Widget? child;
   const StatusMediaPlaceholder({this.child, super.key});

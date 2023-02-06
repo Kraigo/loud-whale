@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/status_entity.dart';
+import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
   }
 
   _loadInitial() async {
-    await context.read<TimelineProvider>().loadThread(widget.statusId);
+    await context.read<ThreadProvider>().loadThread(widget.statusId);
     Scrollable.ensureVisible(originalStatusKey.currentContext!);
   }
 
@@ -34,61 +35,40 @@ class _ThreadScreenState extends State<ThreadScreen> {
         appBar: AppBar(title: Text('Thread')),
         body: CustomScrollView(
           slivers: [
-            StreamBuilder(
-                stream: context
-                    .read<AppDatabase>()
-                    .statusDao
-                    .findStatusRepliesBefore(widget.statusId),
-                initialData: [],
-                builder: (context, snapshot) {
-                  final statuses = snapshot.data!;
-
-                  return SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                    final status = statuses![index];
-                    if (status != null) {
-                      return MiddleContainer(StatusCard(status!));
-                    }
-                    return Text("no data");
-                  }, childCount: statuses.length));
-                }),
+            Consumer<ThreadProvider>(
+              builder: (context, value, child) {
+                final statuses = value.ancestors;
+                return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                  final status = statuses[index];
+                  return MiddleContainer(StatusCard(status));
+                }, childCount: statuses.length));
+              },
+            ),
             SliverToBoxAdapter(
                 key: originalStatusKey,
-                child: StreamBuilder(
-                    stream: context
-                        .read<AppDatabase>()
-                        .statusDao
-                        .findStatusById(widget.statusId),
-                    builder: (context, snapshot) {
-                      final status = snapshot.data;
-                      if (status != null) {
-                        return Container(
-                            decoration: BoxDecoration(
-                              color:
-                                  Theme.of(context).hintColor.withOpacity(0.03),
-                            ),
-                            child: MiddleContainer(StatusCard(status)));
-                      }
-                      return Text("no data");
-                    })),
-            StreamBuilder(
-                stream: context
-                    .read<AppDatabase>()
-                    .statusDao
-                    .findStatusReplies(widget.statusId),
-                initialData: [],
-                builder: (context, snapshot) {
-                  final statuses = snapshot.data!;
-
-                  return SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                    final status = statuses![index];
-                    if (status != null) {
-                      return MiddleContainer(StatusCard(status!));
-                    }
-                    return Text("no data");
-                  }, childCount: statuses.length));
-                })
+                child:
+                    Consumer<ThreadProvider>(builder: (context, value, child) {
+                  final status = value.threadStatus;
+                  if (status != null) {
+                    return Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).hintColor.withOpacity(0.03),
+                        ),
+                        child: MiddleContainer(StatusCard(status)));
+                  }
+                  return Text("no data");
+                })),
+            Consumer<ThreadProvider>(
+              builder: (context, value, child) {
+                final statuses = value.descendants;
+                return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                  final status = statuses[index];
+                  return MiddleContainer(StatusCard(status));
+                }, childCount: statuses.length));
+              },
+            ),
           ],
         ));
   }

@@ -25,6 +25,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final notifications = context.watch<NotificationsProvider>().notifications;
+
     return Scaffold(
         appBar: AppBar(
           title: Text('Notifications'),
@@ -33,29 +35,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: _NotificationsLoading(),
           ),
         ),
-        body: StreamBuilder<List<NotificationEntity>>(
-          initialData: const [],
-          stream: context
-              .read<AppDatabase>()
-              .notificationDao
-              .findAllNotifications(),
-          builder: (context, snapshot) {
-            if (snapshot.data == null) {
-              return Text("Notifications empty");
-            }
-            final notificaitons = snapshot.data!;
-
-            return ListView.separated(
-              itemCount: notificaitons.length,
-              itemBuilder: (context, index) {
-                final item = notificaitons[index];
-                return NotificationCard(item);
-              },
-              separatorBuilder: ((context, index) {
-                return Divider();
-              }),
-            );
+        body: ListView.separated(
+          itemCount: notifications.length,
+          itemBuilder: (context, index) {
+            final item = notifications[index];
+            return NotificationCard(item);
           },
+          separatorBuilder: ((context, index) {
+            return Divider();
+          }),
         ));
   }
 }
@@ -68,36 +56,20 @@ class NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MiddleContainer(Column(
       children: [
-        StreamBuilder(
-          stream: context
-              .read<AppDatabase>()
-              .accountDao
-              .findAccountById(notification.accountId),
-          builder: (context, snapshot) {
-            return Row(children: [
-              Icon(notificationTypeIcon),
-              SizedBox(
-                width: 10,
-              ),
-              Text(
-                  '${snapshot.data?.displayName ?? 'User'} $notificationTypeText')
-            ]);
-          },
-        ),
-        if (notification.statusId != null)
-          StreamBuilder(
-            stream: context
-                .read<AppDatabase>()
-                .statusDao
-                .findStatusById(notification.statusId!),
-            builder: (context, snapshot) {
-              if (snapshot.data == null) return Container();
-              return Padding(
-                padding: EdgeInsets.all(8),
-                child: StatusCardContent(snapshot.data!),
-              );
-            },
-          ),
+        if (notification.account != null)
+          Row(children: [
+            Icon(notificationTypeIcon),
+            SizedBox(
+              width: 10,
+            ),
+            Text(
+                '${notification.account!.displayName ?? 'User'} $notificationTypeText')
+          ]),
+        if (notification.status != null)
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: StatusCardContent(notification.status!),
+          )
       ],
     ));
   }
