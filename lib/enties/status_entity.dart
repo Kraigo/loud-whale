@@ -1,7 +1,22 @@
 import 'package:floor/floor.dart';
+import 'package:mastodon/enties/account_entity.dart';
 import 'package:mastodon_api/mastodon_api.dart';
 
-@Entity(tableName: 'statuses')
+@Entity(
+  tableName: 'statuses',
+  // foreignKeys: [
+  //   ForeignKey(
+  //     childColumns: ['inReplyToId'],
+  //     parentColumns: ['id'],
+  //     entity: StatusEntity,
+  //   ),
+  //   ForeignKey(
+  //     childColumns: ['inReplyToAccountId'],
+  //     parentColumns: ['id'],
+  //     entity: AccountEntity,
+  //   ),
+  // ],
+)
 class StatusEntity {
   @primaryKey
   String id;
@@ -27,8 +42,6 @@ class StatusEntity {
   DateTime createdAt;
 
   String? reblogId;
-
-  @ColumnInfo(name: 'account_id')
   String accountId;
 
   StatusEntity({

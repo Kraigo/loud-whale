@@ -71,6 +71,8 @@ class _$AppDatabase extends AppDatabase {
 
   TimelineDao? _timelineDaoInstance;
 
+  NotificationDao? _notificationDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -95,11 +97,13 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `username` TEXT NOT NULL, `displayName` TEXT NOT NULL, `acct` TEXT NOT NULL, `note` TEXT NOT NULL, `url` TEXT NOT NULL, `avatar` TEXT NOT NULL, `avatarStatic` TEXT NOT NULL, `header` TEXT NOT NULL, `headerStatic` TEXT NOT NULL, `followersCount` INTEGER NOT NULL, `followingCount` INTEGER NOT NULL, `subscribingCount` INTEGER, `statusesCount` INTEGER NOT NULL, `isBot` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `account_id` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `status_id` TEXT NOT NULL, `type` INTEGER NOT NULL, `url` TEXT NOT NULL, `previewUrl` TEXT NOT NULL, `remoteUrl` TEXT, `description` TEXT, FOREIGN KEY (`status_id`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `statusId` TEXT NOT NULL, `type` INTEGER NOT NULL, `url` TEXT NOT NULL, `previewUrl` TEXT NOT NULL, `remoteUrl` TEXT, `description` TEXT, FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `notifications` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `accountId` TEXT NOT NULL, `statusId` TEXT, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -130,6 +134,12 @@ class _$AppDatabase extends AppDatabase {
   @override
   TimelineDao get timelineDao {
     return _timelineDaoInstance ??= _$TimelineDao(database, changeListener);
+  }
+
+  @override
+  NotificationDao get notificationDao {
+    return _notificationDaoInstance ??=
+        _$NotificationDao(database, changeListener);
   }
 }
 
@@ -172,7 +182,7 @@ class _$StatusDao extends StatusDao {
                       item.isPinned == null ? null : (item.isPinned! ? 1 : 0),
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
-                  'account_id': item.accountId
+                  'accountId': item.accountId
                 },
             changeListener);
 
@@ -219,7 +229,7 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['account_id'] as String),
+            accountId: row['accountId'] as String),
         queryableName: 'statuses',
         isView: false);
   }
@@ -258,7 +268,7 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['account_id'] as String),
+            accountId: row['accountId'] as String),
         arguments: [id],
         queryableName: 'statuses',
         isView: false);
@@ -299,7 +309,48 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['account_id'] as String),
+            accountId: row['accountId'] as String),
+        arguments: [id],
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
+  Stream<List<StatusEntity?>> findStatusRepliesBefore(String id) {
+    return _queryAdapter.queryListStream(
+        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String),
         arguments: [id],
         queryableName: 'statuses',
         isView: false);
@@ -340,7 +391,7 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['account_id'] as String),
+            accountId: row['accountId'] as String),
         arguments: [id],
         queryableName: 'statuses',
         isView: false);
@@ -537,7 +588,7 @@ class _$AttachmentDao extends AttachmentDao {
             'attachments',
             (AttachmentEntity item) => <String, Object?>{
                   'id': item.id,
-                  'status_id': item.statusId,
+                  'statusId': item.statusId,
                   'type': item.type,
                   'url': item.url,
                   'previewUrl': item.previewUrl,
@@ -558,7 +609,7 @@ class _$AttachmentDao extends AttachmentDao {
   Stream<AttachmentEntity?> findAttachmentById(String id) {
     return _queryAdapter.queryStream('SELECT * FROM attachments WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
-            statusId: row['status_id'] as String,
+            statusId: row['statusId'] as String,
             id: row['id'] as String,
             type: row['type'] as int,
             url: row['url'] as String,
@@ -573,9 +624,9 @@ class _$AttachmentDao extends AttachmentDao {
   @override
   Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId) {
     return _queryAdapter.queryListStream(
-        'SELECT * FROM attachments WHERE status_id = ?1',
+        'SELECT * FROM attachments WHERE statusId = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
-            statusId: row['status_id'] as String,
+            statusId: row['statusId'] as String,
             id: row['id'] as String,
             type: row['type'] as int,
             url: row['url'] as String,
@@ -638,7 +689,7 @@ class _$TimelineDao extends TimelineDao {
                       item.isPinned == null ? null : (item.isPinned! ? 1 : 0),
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
-                  'account_id': item.accountId
+                  'accountId': item.accountId
                 },
             changeListener),
         _attachmentEntityInsertionAdapter = InsertionAdapter(
@@ -646,7 +697,7 @@ class _$TimelineDao extends TimelineDao {
             'attachments',
             (AttachmentEntity item) => <String, Object?>{
                   'id': item.id,
-                  'status_id': item.statusId,
+                  'statusId': item.statusId,
                   'type': item.type,
                   'url': item.url,
                   'previewUrl': item.previewUrl,
@@ -706,17 +757,70 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Future<void> saveTimelineStatues(List<Status> statuses) async {
+  Future<void> saveTimelineStatuses(List<Status> statuses) async {
     if (database is sqflite.Transaction) {
-      await super.saveTimelineStatues(statuses);
+      await super.saveTimelineStatuses(statuses);
     } else {
       await (database as sqflite.Database)
           .transaction<void>((transaction) async {
         final transactionDatabase = _$AppDatabase(changeListener)
           ..database = transaction;
-        await transactionDatabase.timelineDao.saveTimelineStatues(statuses);
+        await transactionDatabase.timelineDao.saveTimelineStatuses(statuses);
       });
     }
+  }
+}
+
+class _$NotificationDao extends NotificationDao {
+  _$NotificationDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _notificationEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'notifications',
+            (NotificationEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'type': item.type,
+                  'createdAt': _dateTimeConverter.encode(item.createdAt),
+                  'accountId': item.accountId,
+                  'statusId': item.statusId
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<NotificationEntity>
+      _notificationEntityInsertionAdapter;
+
+  @override
+  Stream<List<NotificationEntity>> findAllNotifications() {
+    return _queryAdapter.queryListStream('SELECT * FROM notifications',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?),
+        queryableName: 'notifications',
+        isView: false);
+  }
+
+  @override
+  Future<void> insertNotification(NotificationEntity notification) async {
+    await _notificationEntityInsertionAdapter.insert(
+        notification, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertNotifications(
+      List<NotificationEntity> notifications) async {
+    await _notificationEntityInsertionAdapter.insertList(
+        notifications, OnConflictStrategy.replace);
   }
 }
 

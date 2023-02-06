@@ -14,14 +14,18 @@ class ThreadScreen extends StatefulWidget {
 }
 
 class _ThreadScreenState extends State<ThreadScreen> {
+  late GlobalKey originalStatusKey;
+
   @override
   void initState() {
+    originalStatusKey = new GlobalKey();
     Future.microtask(_loadInitial);
     super.initState();
   }
 
   _loadInitial() async {
-    context.read<TimelineProvider>().loadThread(widget.statusId);
+    await context.read<TimelineProvider>().loadThread(widget.statusId);
+    Scrollable.ensureVisible(originalStatusKey.currentContext!);
   }
 
   @override
@@ -30,7 +34,26 @@ class _ThreadScreenState extends State<ThreadScreen> {
         appBar: AppBar(title: Text('Thread')),
         body: CustomScrollView(
           slivers: [
+            StreamBuilder(
+                stream: context
+                    .read<AppDatabase>()
+                    .statusDao
+                    .findStatusRepliesBefore(widget.statusId),
+                initialData: [],
+                builder: (context, snapshot) {
+                  final statuses = snapshot.data!;
+
+                  return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                    final status = statuses![index];
+                    if (status != null) {
+                      return StatusCardContainer(StatusCard(status!));
+                    }
+                    return Text("no data");
+                  }, childCount: statuses.length));
+                }),
             SliverToBoxAdapter(
+                key: originalStatusKey,
                 child: StreamBuilder(
                     stream: context
                         .read<AppDatabase>()

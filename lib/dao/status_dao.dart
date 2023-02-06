@@ -35,6 +35,29 @@ abstract class StatusDao {
   ''')
   Stream<List<StatusEntity?>> findStatusReplies(String id);
 
+  @Query('''
+  WITH RECURSIVE 
+    descendants(id, inReplyToId) AS (
+      SELECT statuses.id, statuses.inReplyToId
+      FROM statuses 
+      WHERE statuses.id = :id
+      UNION ALL
+      
+      SELECT statuses.id, statuses.inReplyToId
+      FROM descendants
+      JOIN statuses ON descendants.inReplyToId = statuses.id
+    )
+    SELECT *
+    FROM statuses
+    WHERE id IN (
+      SELECT id 
+      FROM descendants
+      WHERE id <> :id
+    )
+    ORDER BY createdAt ASC
+  ''')
+  Stream<List<StatusEntity?>> findStatusRepliesBefore(String id);
+
   @Query('SELECT * FROM statuses WHERE inReplyTo = :id')
   Stream<StatusEntity?> findStatusReplied(String id);
 

@@ -28,7 +28,7 @@ class TimelineProvider extends ChangeNotifier {
     try {
       final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
-        await timelineDao.saveTimelineStatues(resp.data);
+        await timelineDao.saveTimelineStatuses(resp.data);
       }
     } finally {
       _loading = false;
@@ -36,7 +36,7 @@ class TimelineProvider extends ChangeNotifier {
     }
   }
 
-  loadThread(String statusId) async {
+  Future<void> loadThread(String statusId) async {
     _loading = true;
     notifyListeners();
 
@@ -44,7 +44,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .lookupStatusContext(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatues([
+        await timelineDao.saveTimelineStatuses([
           ...resp.data.ancestors,
           ...resp.data.descendants
         ]);
@@ -60,7 +60,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .createFavourite(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatues([resp.data]);
+        await timelineDao.saveTimelineStatuses([resp.data]);
       }
     } finally { 
       notifyListeners();

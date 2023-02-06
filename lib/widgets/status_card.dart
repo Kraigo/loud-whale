@@ -9,7 +9,34 @@ import 'package:provider/provider.dart';
 class StatusCard extends StatelessWidget {
   final StatusEntity status;
   final StatusEntity? reblog;
-  const StatusCard(this.status, {this.reblog, super.key});
+  final bool showMedia;
+  const StatusCard(
+    this.status, {
+    this.showMedia = true,
+    this.reblog,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(children: [
+        if (reblog != null) StatusCardReblogged(reblog!),
+        StatusCardContent(status),
+        StatusCardMedia(status),
+        const SizedBox(
+          height: 10,
+        ),
+        StatusCardActions(status)
+      ]),
+    );
+  }
+}
+
+class StatusCardContent extends StatelessWidget {
+  final StatusEntity status;
+  const StatusCardContent(this.status, {super.key});
 
   _openThread(BuildContext context) async {
     await Navigator.of(context)
@@ -18,10 +45,8 @@ class StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(children: [
-        if (reblog != null) StatusCardReblogged(reblog!),
+    return Column(
+      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -42,12 +67,7 @@ class StatusCard extends StatelessWidget {
                 debugPrint(url);
               }),
         ),
-        StatusCardMedia(status),
-        const SizedBox(
-          height: 10,
-        ),
-        StatusCardActions(status)
-      ]),
+      ],
     );
   }
 }

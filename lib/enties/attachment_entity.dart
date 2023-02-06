@@ -6,7 +6,7 @@ import 'package:mastodon_api/mastodon_api.dart';
   tableName: 'attachments',
   foreignKeys: [
     ForeignKey(
-      childColumns: ['status_id'],
+      childColumns: ['statusId'],
       parentColumns: ['id'],
       entity: StatusEntity,
     )
@@ -15,7 +15,6 @@ import 'package:mastodon_api/mastodon_api.dart';
 class AttachmentEntity {
   @primaryKey
   String id;
-  @ColumnInfo(name: 'status_id')
   String statusId;
   int type;
   String url;

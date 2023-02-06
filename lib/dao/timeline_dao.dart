@@ -14,7 +14,7 @@ abstract class TimelineDao {
   Future<void> insertAccounts(List<AccountEntity> accounts);
 
   @transaction
-  Future<void> saveTimelineStatues(List<Status> statuses) async {
+  Future<void> saveTimelineStatuses(List<Status> statuses) async {
     List<StatusEntity> statusesEntries = [];
     List<AccountEntity> accountsEntries = [];
     List<AttachmentEntity> attachmentsEntries = [];

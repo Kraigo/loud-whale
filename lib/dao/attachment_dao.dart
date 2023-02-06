@@ -7,7 +7,7 @@ abstract class AttachmentDao {
   @Query('SELECT * FROM attachments WHERE id = :id')
   Stream<AttachmentEntity?> findAttachmentById(String id);
 
-  @Query('SELECT * FROM attachments WHERE status_id = :statusId')
+  @Query('SELECT * FROM attachments WHERE statusId = :statusId')
   Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId);
 
   @Insert(onConflict: OnConflictStrategy.replace)
