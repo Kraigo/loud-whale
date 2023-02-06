@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-class StatusCardContainer extends StatelessWidget {
+class MiddleContainer extends StatelessWidget {
   final Widget child;
-  const StatusCardContainer(this.child, {super.key});
+  const MiddleContainer(this.child, {super.key});
   @override
   Widget build(BuildContext context) {
     return UnconstrainedBox(

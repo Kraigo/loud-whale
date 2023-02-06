@@ -62,13 +62,13 @@ class _TimelineList extends StatelessWidget {
               final item = statuses[index];
 
               if (item.reblogId != null) {
-                return StatusCardContainer(StatusCardStream(
+                return MiddleContainer(StatusCardStream(
                   statusId: item.reblogId!,
                   reblog: item,
                 ));
               }
 
-              return StatusCardContainer(StatusCard(item));
+              return MiddleContainer(StatusCard(item));
             },
             separatorBuilder: ((context, index) {
               return Divider();

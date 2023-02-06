@@ -47,7 +47,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                       delegate: SliverChildBuilderDelegate((context, index) {
                     final status = statuses![index];
                     if (status != null) {
-                      return StatusCardContainer(StatusCard(status!));
+                      return MiddleContainer(StatusCard(status!));
                     }
                     return Text("no data");
                   }, childCount: statuses.length));
@@ -67,7 +67,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                               color:
                                   Theme.of(context).hintColor.withOpacity(0.03),
                             ),
-                            child: StatusCardContainer(StatusCard(status)));
+                            child: MiddleContainer(StatusCard(status)));
                       }
                       return Text("no data");
                     })),
@@ -84,7 +84,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                       delegate: SliverChildBuilderDelegate((context, index) {
                     final status = statuses![index];
                     if (status != null) {
-                      return StatusCardContainer(StatusCard(status!));
+                      return MiddleContainer(StatusCard(status!));
                     }
                     return Text("no data");
                   }, childCount: statuses.length));

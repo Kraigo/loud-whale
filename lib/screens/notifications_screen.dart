@@ -66,7 +66,7 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StatusCardContainer(Column(
+    return MiddleContainer(Column(
       children: [
         StreamBuilder(
           stream: context
