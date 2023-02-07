@@ -25,7 +25,7 @@ class TimelineProvider extends ChangeNotifier {
     required this.timelineDao,
   });
 
-  refresh() async {
+  Future<void> refresh() async {
     _statuses = await statusDao.findAllStatuses();
     for (var s in _statuses) {
       await timelineDao.populateStatus(s);

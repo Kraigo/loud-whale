@@ -18,11 +18,12 @@ class NotificationsProvider extends ChangeNotifier {
     required this.timelineDao,
   });
 
-  refresh() async {
+  Future<void> refresh() async {
     _notifications = await notificationDao.findAllNotifications();
     for (var n in _notifications) {
       await timelineDao.populateNotification(n);
     }
+    notifyListeners();
   }
 
   loadNotifications() async {

@@ -24,48 +24,46 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   _loadInitial() async {
     await context.read<ThreadProvider>().loadThread(widget.statusId);
-    Scrollable.ensureVisible(originalStatusKey.currentContext!);
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => Scrollable.ensureVisible(originalStatusKey.currentContext!));
   }
 
   @override
   Widget build(BuildContext context) {
+    final threadProvider = context.watch<ThreadProvider>();
     return Scaffold(
         appBar: AppBar(title: const Text('Thread')),
         body: CustomScrollView(
           slivers: [
-            Consumer<ThreadProvider>(
-              builder: (context, value, child) {
-                final statuses = value.ancestors;
-                return SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                  final status = statuses[index];
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final status = threadProvider.ancestors[index];
                   return MiddleContainer(StatusCard(status));
-                }, childCount: statuses.length));
-              },
+                },
+                childCount: threadProvider.ancestors.length,
+              ),
             ),
             SliverToBoxAdapter(
                 key: originalStatusKey,
-                child:
-                    Consumer<ThreadProvider>(builder: (context, value, child) {
-                  final status = value.threadStatus;
-                  if (status != null) {
-                    return Container(
+                child: threadProvider.threadStatus != null
+                    ? Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).hintColor.withOpacity(0.03),
                         ),
-                        child: MiddleContainer(StatusCard(status)));
-                  }
-                  return const Text("no data");
-                })),
-            Consumer<ThreadProvider>(
-              builder: (context, value, child) {
-                final statuses = value.descendants;
-                return SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                  final status = statuses[index];
+                        child: MiddleContainer(
+                          StatusCard(threadProvider.threadStatus!),
+                        ),
+                      )
+                    : const Text("Not data")),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final status = threadProvider.descendants[index];
                   return MiddleContainer(StatusCard(status));
-                }, childCount: statuses.length));
-              },
+                },
+                childCount: threadProvider.descendants.length,
+              ),
             ),
           ],
         ));
