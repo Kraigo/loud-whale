@@ -26,28 +26,16 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
+
     return NavigationRail(
-      destinations: const [
-        NavigationRailDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: Text('Home'),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Icons.notifications_outlined),
-          selectedIcon: Icon(Icons.notifications),
-          label: Text('Notifications'),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: Text('Profile'),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Icons.create_outlined),
-          selectedIcon: Icon(Icons.create),
-          label: Text('Compose'),
-        ),
+      destinations: [
+        ...homeProvider.menuList.map(
+          (e) => NavigationRailDestination(
+            icon: Icon(e.icon),
+            selectedIcon: Icon(e.selectedIcon),
+            label: Text(e.label),
+          ),
+        )
       ],
       onDestinationSelected: (value) {
         homeProvider.selectIndex(value);
@@ -63,14 +51,16 @@ class _MainContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
-    switch (homeProvider.selectedIndex) {
-      case 0:
+    switch (homeProvider.selectedMenu) {
+      case HomeMenu.home:
         return const TimelineScreen();
-      case 1:
+      case HomeMenu.notifications:
         return const NotificationsScreen();
-      case 2:
+      case HomeMenu.profile:
         return const MyProfileScreen();
-      case 3:
+      case HomeMenu.compose:
+        return const ComposeScreen();
+      case HomeMenu.search:
         return const ComposeScreen();
       default:
         return const Center(child: Text("Empty Screen"));

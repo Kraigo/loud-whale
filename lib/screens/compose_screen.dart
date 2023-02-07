@@ -29,7 +29,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final text = _textController?.text ?? '';
     final homeProvider = context.read<HomeProvider>();
     await context.read<ComposeProvider>().publishStatus(text);
-    homeProvider.openHome();
+    homeProvider.selectMenu(HomeMenu.home);
   }
 
   @override
