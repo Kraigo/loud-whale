@@ -15,7 +15,7 @@ class TimeAgo extends StatelessWidget {
           size: 12,
           color: theme.hintColor,
         ),
-        SizedBox(
+        const SizedBox(
           width: 2,
         ),
         Text(

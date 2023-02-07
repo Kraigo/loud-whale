@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/status_entity.dart';
 import 'package:mastodon/providers/thread_provider.dart';
-import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +17,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
   @override
   void initState() {
-    originalStatusKey = new GlobalKey();
+    originalStatusKey = GlobalKey();
     Future.microtask(_loadInitial);
     super.initState();
   }
@@ -32,7 +30,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('Thread')),
+        appBar: AppBar(title: const Text('Thread')),
         body: CustomScrollView(
           slivers: [
             Consumer<ThreadProvider>(
@@ -57,7 +55,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                         ),
                         child: MiddleContainer(StatusCard(status)));
                   }
-                  return Text("no data");
+                  return const Text("no data");
                 })),
             Consumer<ThreadProvider>(
               builder: (context, value, child) {
@@ -76,12 +74,12 @@ class _ThreadScreenState extends State<ThreadScreen> {
 
 class _ThreadCard extends StatelessWidget {
   final StatusEntity? status;
-  const _ThreadCard(this.status, {super.key});
+  const _ThreadCard(this.status);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Text("status"),
+      child: const Text("status"),
     );
   }
 }

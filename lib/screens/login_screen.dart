@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/helpers/mastodon_helper.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';

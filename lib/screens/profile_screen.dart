@@ -27,7 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('Profile')),
+        appBar: AppBar(title: const Text('Profile')),
         body: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -39,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     builder: (context, snapshot) {
                       final account = snapshot.data;
                       if (account == null) {
-                        return Text("NO ACCOUNT!");
+                        return const Text("NO ACCOUNT!");
                       }
                       return AccountCard(account);
                     }))

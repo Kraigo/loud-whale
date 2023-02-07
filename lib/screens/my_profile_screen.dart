@@ -30,7 +30,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
+      appBar: AppBar(title: const Text("Profile")),
       body: Column(
         children: [
           StreamBuilder(
@@ -42,7 +42,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 if (snapshot.data == null) return Container();
                 return AccountCard(snapshot.data!);
               }),
-          ElevatedButton(onPressed: _onLogout, child: Text("Logout")),
+          ElevatedButton(onPressed: _onLogout, child: const Text("Logout")),
         ],
       ),
     );

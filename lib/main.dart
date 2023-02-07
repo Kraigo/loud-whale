@@ -7,11 +7,9 @@ import 'package:mastodon/providers/notifications_provider.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/screens/start_screen.dart';
-import 'package:mastodon/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'base/database.dart';
-import 'base/keys.dart';
 import 'base/routes.dart';
 import 'base/theme.dart';
 
@@ -61,7 +59,7 @@ void main() async {
       ),
       ChangeNotifierProvider(create: (context) => HomeProvider())
     ],
-    child: MastodonApp(),
+    child: const MastodonApp(),
   ));
 }
 
@@ -74,7 +72,7 @@ class MastodonApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
           primarySwatch: AppTheme.purple,
-          appBarTheme: AppBarTheme(
+          appBarTheme: const AppBarTheme(
             elevation: 0,
           )),
       onGenerateRoute: Routes.onGenerateRoute,

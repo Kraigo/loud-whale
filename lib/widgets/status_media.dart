@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/entries.dart';
-import 'package:provider/provider.dart';
 
 class StatusMedia extends StatelessWidget {
   final List<AttachmentEntity> attachments;

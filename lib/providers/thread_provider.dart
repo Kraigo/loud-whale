@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/dao/account_dao.dart';
-import 'package:mastodon/dao/attachment_dao.dart';
 import 'package:mastodon/dao/status_dao.dart';
 import 'package:mastodon/dao/timeline_dao.dart';
 import 'package:mastodon/enties/entries.dart';

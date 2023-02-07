@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/keys.dart';
-import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/screens/compose_screen.dart';
 import 'package:mastodon/screens/my_profile_screen.dart';
@@ -23,13 +21,13 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _Sidebar extends StatelessWidget {
-  const _Sidebar({super.key});
+  const _Sidebar();
 
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
     return NavigationRail(
-      destinations: [
+      destinations: const [
         NavigationRailDestination(
           icon: Icon(Icons.home_outlined),
           selectedIcon: Icon(Icons.home),
@@ -60,22 +58,22 @@ class _Sidebar extends StatelessWidget {
 }
 
 class _MainContent extends StatelessWidget {
-  const _MainContent({super.key});
+  const _MainContent();
 
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
     switch (homeProvider.selectedIndex) {
       case 0:
-        return TimelineScreen();
+        return const TimelineScreen();
       case 1:
-        return NotificationsScreen();
+        return const NotificationsScreen();
       case 2:
-        return MyProfileScreen();
+        return const MyProfileScreen();
       case 3:
-        return ComposeScreen();
+        return const ComposeScreen();
       default:
-        return Center(child: Text("Empty Screen"));
+        return const Center(child: Text("Empty Screen"));
     }
   }
 }

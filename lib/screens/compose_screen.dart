@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:provider/provider.dart';
@@ -38,14 +36,14 @@ class _ComposeScreenState extends State<ComposeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Compose"),
-        bottom: PreferredSize(
+        title: const Text("Compose"),
+        bottom: const PreferredSize(
           preferredSize: Size.fromHeight(3.0),
           child: _ComposeLoading(),
         ),
       ),
       body: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(children: [
           TextField(
             minLines: 5,
@@ -53,7 +51,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
             decoration: InputDecoration(
               hintText: 'What\'s on your mind?',
               counterText: '${_textController?.text.length ?? 0} characters',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             onChanged: (_) {
               setState(() {});
@@ -63,7 +61,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
           ),
           ElevatedButton(
               onPressed: hasStatusText ? _onCompose : null,
-              child: Text('Publish'))
+              child: const Text('Publish'))
         ]),
       ),
     );
@@ -75,13 +73,13 @@ class _ComposeScreenState extends State<ComposeScreen> {
 }
 
 class _ComposeLoading extends StatelessWidget {
-  const _ComposeLoading({super.key});
+  const _ComposeLoading();
 
   @override
   Widget build(BuildContext context) {
     final composeProvider = context.watch<ComposeProvider>();
     if (composeProvider.loading) {
-      return LinearProgressIndicator();
+      return const LinearProgressIndicator();
     }
     return Container();
   }

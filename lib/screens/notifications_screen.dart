@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/notifications_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
@@ -30,8 +29,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text('Notifications'),
-          bottom: PreferredSize(
+          title: const Text('Notifications'),
+          bottom: const PreferredSize(
             preferredSize: Size.fromHeight(3.0),
             child: _NotificationsLoading(),
           ),
@@ -43,7 +42,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return NotificationCard(item);
           },
           separatorBuilder: ((context, index) {
-            return Divider();
+            return const Divider();
           }),
         ));
   }
@@ -60,7 +59,7 @@ class NotificationCard extends StatelessWidget {
         if (notification.account != null)
           Row(children: [
             Icon(notificationTypeIcon),
-            SizedBox(
+            const SizedBox(
               width: 10,
             ),
             Text(
@@ -68,7 +67,7 @@ class NotificationCard extends StatelessWidget {
           ]),
         if (notification.status != null)
           Padding(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: StatusCardContent(notification.status!),
           )
       ],
@@ -121,13 +120,13 @@ class NotificationCard extends StatelessWidget {
 }
 
 class _NotificationsLoading extends StatelessWidget {
-  const _NotificationsLoading({super.key});
+  const _NotificationsLoading();
 
   @override
   Widget build(BuildContext context) {
     final notificationsProvider = context.watch<NotificationsProvider>();
     if (notificationsProvider.loading) {
-      return LinearProgressIndicator();
+      return const LinearProgressIndicator();
     }
     return Container();
   }

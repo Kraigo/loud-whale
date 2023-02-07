@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
@@ -105,7 +104,7 @@ class StatusCardActions extends StatelessWidget {
           onPressed: () {},
           icon: Icons.share,
         ),
-        Spacer(),
+        const Spacer(),
         ActionButton(
           onPressed: () {},
           icon: Icons.more_vert,
@@ -128,10 +127,10 @@ class StatusCardAuthor extends StatelessWidget {
   Widget build(BuildContext context) {
     var displayName = 'User';
 
-    if (account?.displayName.isNotEmpty ?? false) {
+    if (account.displayName.isNotEmpty ?? false) {
       displayName = account.displayName;
     }
-    if (account?.displayName.isEmpty ?? false) {
+    if (account.displayName.isEmpty ?? false) {
       displayName = account.username;
     }
 
@@ -139,9 +138,9 @@ class StatusCardAuthor extends StatelessWidget {
         onTap: () => _openProfile(context),
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           AccountAvatar(
-            avatar: account?.avatar,
+            avatar: account.avatar,
           ),
-          SizedBox(
+          const SizedBox(
             width: 10,
           ),
           Column(
@@ -152,7 +151,7 @@ class StatusCardAuthor extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyText1,
               ),
               Text(
-                '@${account?.acct ?? ''}',
+                '@${account.acct ?? ''}',
                 style: Theme.of(context).textTheme.caption,
               ),
             ],
@@ -169,10 +168,10 @@ class StatusCardReblogged extends StatelessWidget {
   Widget build(BuildContext context) {
     var displayName = 'User';
 
-    if (account?.displayName.isNotEmpty ?? false) {
+    if (account.displayName.isNotEmpty ?? false) {
       displayName = account.displayName;
     }
-    if (account?.displayName.isEmpty ?? false) {
+    if (account.displayName.isEmpty ?? false) {
       displayName = account.username;
     }
 
@@ -190,14 +189,14 @@ class StatusCardReblogged extends StatelessWidget {
                 size: 14,
                 color: Theme.of(context).hintColor,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 4,
               ),
               Text(displayName),
-              SizedBox(
+              const SizedBox(
                 width: 4,
               ),
-              Text("boosted")
+              const Text("boosted")
             ],
           )),
     );
