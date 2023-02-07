@@ -11,7 +11,6 @@ class ThreadProvider extends ChangeNotifier {
   StatusDao statusDao;
   TimelineDao timelineDao;
 
-  String? _statusId;
   StatusEntity? _threadStatus;
   StatusEntity? get threadStatus => _threadStatus;
 
@@ -26,11 +25,10 @@ class ThreadProvider extends ChangeNotifier {
     required this.timelineDao,
   });
 
-  Future<void> refresh() async {
-    if (_statusId == null) return;
-    _threadStatus = await statusDao.findStatusById(_statusId!);
-    _ancestors = await statusDao.findStatusRepliesAncestors(_statusId!);
-    _descendants = await statusDao.findStatusRepliesDescendants(_statusId!);
+  Future<void> refresh(String statusId) async {
+    _threadStatus = await statusDao.findStatusById(statusId);
+    _ancestors = await statusDao.findStatusRepliesAncestors(statusId);
+    _descendants = await statusDao.findStatusRepliesDescendants(statusId);
 
     await timelineDao.populateStatus(_threadStatus);
     for (var s in _ancestors) {
@@ -47,7 +45,6 @@ class ThreadProvider extends ChangeNotifier {
     _loading = true;
     _ancestors = [];
     _descendants = [];
-    _statusId = statusId;
     notifyListeners();
 
     try {
@@ -56,11 +53,19 @@ class ThreadProvider extends ChangeNotifier {
       if (resp != null) {
         await timelineDao.saveTimelineStatuses(
             [...resp.data.ancestors, ...resp.data.descendants]);
-        await refresh();
+        await refresh(statusId);
       }
     } finally {
       _loading = false;
       notifyListeners();
     }
+  }
+
+  clear() {
+    _loading = true;
+    _ancestors = [];
+    _descendants = [];
+    _threadStatus = null;
+    notifyListeners();
   }
 }

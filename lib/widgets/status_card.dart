@@ -214,7 +214,7 @@ class StatusCardPlaceholder extends StatelessWidget {
       height: 200,
       width: double.infinity,
       child: Container(
-        decoration: BoxDecoration(color: Theme.of(context).hintColor),
+        decoration: BoxDecoration(color: Theme.of(context).disabledColor),
       ),
     );
   }

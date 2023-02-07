@@ -23,6 +23,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
   }
 
   _loadInitial() async {
+    await context.read<ThreadProvider>().refresh(widget.statusId);
     await context.read<ThreadProvider>().loadThread(widget.statusId);
     WidgetsBinding.instance.addPostFrameCallback(
         (_) => Scrollable.ensureVisible(originalStatusKey.currentContext!));
@@ -46,16 +47,14 @@ class _ThreadScreenState extends State<ThreadScreen> {
             ),
             SliverToBoxAdapter(
                 key: originalStatusKey,
-                child: threadProvider.threadStatus != null
-                    ? Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).hintColor.withOpacity(0.03),
-                        ),
-                        child: MiddleContainer(
-                          StatusCard(threadProvider.threadStatus!),
-                        ),
-                      )
-                    : const Text("Not data")),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).hintColor.withOpacity(0.03),
+                  ),
+                  child: MiddleContainer(threadProvider.threadStatus != null
+                      ? StatusCard(threadProvider.threadStatus!)
+                      : const StatusCardPlaceholder()),
+                )),
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
