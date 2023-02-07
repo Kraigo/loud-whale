@@ -39,7 +39,7 @@ class ThreadProvider extends ChangeNotifier {
         await timelineDao.saveTimelineStatuses(
             [...resp.data.ancestors, ...resp.data.descendants]);
 
-        _threadStatus = await statusDao.findStatusById(statusId).first;
+        _threadStatus = await statusDao.findStatusById(statusId);
         _ancestors = await statusDao.findStatusRepliesAncestors(statusId);
         _descendants = await statusDao.findStatusRepliesDescendants(statusId);
 

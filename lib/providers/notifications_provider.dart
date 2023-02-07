@@ -18,6 +18,13 @@ class NotificationsProvider extends ChangeNotifier {
     required this.timelineDao,
   });
 
+  refresh() async {
+    _notifications = await notificationDao.findAllNotifications();
+    for (var n in _notifications) {
+      await timelineDao.populateNotification(n);
+    }
+  }
+
   loadNotifications() async {
     _loading = true;
     notifyListeners();
@@ -36,9 +43,7 @@ class NotificationsProvider extends ChangeNotifier {
         await timelineDao.insertAccounts(
             resp.data.map((e) => AccountEntity.fromModel(e.account)).toList());
 
-        for (var n in _notifications) {
-          await timelineDao.populateNotification(n);
-        }
+        await refresh();
       }
     } finally {
       _loading = false;

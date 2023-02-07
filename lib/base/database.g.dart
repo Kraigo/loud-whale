@@ -147,7 +147,7 @@ class _$StatusDao extends StatusDao {
   _$StatusDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database, changeListener),
+  )   : _queryAdapter = QueryAdapter(database),
         _statusEntityInsertionAdapter = InsertionAdapter(
             database,
             'statuses',
@@ -183,8 +183,7 @@ class _$StatusDao extends StatusDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
                   'accountId': item.accountId
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -195,8 +194,8 @@ class _$StatusDao extends StatusDao {
   final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
 
   @override
-  Stream<List<StatusEntity>> findAllStatuses() {
-    return _queryAdapter.queryListStream(
+  Future<List<StatusEntity>> findAllStatuses() async {
+    return _queryAdapter.queryList(
         'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
@@ -229,14 +228,12 @@ class _$StatusDao extends StatusDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String),
-        queryableName: 'statuses',
-        isView: false);
+            accountId: row['accountId'] as String));
   }
 
   @override
-  Stream<StatusEntity?> findStatusById(String id) {
-    return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
+  Future<StatusEntity?> findStatusById(String id) async {
+    return _queryAdapter.query('SELECT * FROM statuses WHERE id = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -269,9 +266,7 @@ class _$StatusDao extends StatusDao {
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
@@ -291,9 +286,8 @@ class _$StatusDao extends StatusDao {
   }
 
   @override
-  Stream<StatusEntity?> findStatusReplied(String id) {
-    return _queryAdapter.queryStream(
-        'SELECT * FROM statuses WHERE inReplyTo = ?1',
+  Future<StatusEntity?> findStatusReplied(String id) async {
+    return _queryAdapter.query('SELECT * FROM statuses WHERE inReplyTo = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -326,9 +320,7 @@ class _$StatusDao extends StatusDao {
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
@@ -450,7 +442,30 @@ class _$AccountDao extends AccountDao {
   }
 
   @override
-  Stream<AccountEntity?> findAccountById(String id) {
+  Future<AccountEntity?> findAccountById(String id) async {
+    return _queryAdapter.query('SELECT * FROM accounts WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
+        arguments: [id]);
+  }
+
+  @override
+  Stream<AccountEntity?> findAccountByIdStream(String id) {
     return _queryAdapter.queryStream('SELECT * FROM accounts WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AccountEntity(
             id: row['id'] as String,
@@ -475,7 +490,30 @@ class _$AccountDao extends AccountDao {
   }
 
   @override
-  Stream<AccountEntity?> findCurrentAccount() {
+  Future<AccountEntity?> findCurrentAccount() async {
+    return _queryAdapter.query(
+        'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)));
+  }
+
+  @override
+  Stream<AccountEntity?> findCurrentAccountStream() {
     return _queryAdapter.queryStream(
         'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
         mapper: (Map<String, Object?> row) => AccountEntity(
@@ -516,7 +554,7 @@ class _$AttachmentDao extends AttachmentDao {
   _$AttachmentDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database, changeListener),
+  )   : _queryAdapter = QueryAdapter(database),
         _attachmentEntityInsertionAdapter = InsertionAdapter(
             database,
             'attachments',
@@ -528,8 +566,7 @@ class _$AttachmentDao extends AttachmentDao {
                   'previewUrl': item.previewUrl,
                   'remoteUrl': item.remoteUrl,
                   'description': item.description
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -540,8 +577,8 @@ class _$AttachmentDao extends AttachmentDao {
   final InsertionAdapter<AttachmentEntity> _attachmentEntityInsertionAdapter;
 
   @override
-  Stream<AttachmentEntity?> findAttachmentById(String id) {
-    return _queryAdapter.queryStream('SELECT * FROM attachments WHERE id = ?1',
+  Future<AttachmentEntity?> findAttachmentById(String id) async {
+    return _queryAdapter.query('SELECT * FROM attachments WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
             statusId: row['statusId'] as String,
             id: row['id'] as String,
@@ -550,14 +587,13 @@ class _$AttachmentDao extends AttachmentDao {
             previewUrl: row['previewUrl'] as String,
             remoteUrl: row['remoteUrl'] as String?,
             description: row['description'] as String?),
-        arguments: [id],
-        queryableName: 'attachments',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
-  Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId) {
-    return _queryAdapter.queryListStream(
+  Future<List<AttachmentEntity>> findAttachemntsByStatus(
+      String statusId) async {
+    return _queryAdapter.queryList(
         'SELECT * FROM attachments WHERE statusId = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
             statusId: row['statusId'] as String,
@@ -567,9 +603,7 @@ class _$AttachmentDao extends AttachmentDao {
             previewUrl: row['previewUrl'] as String,
             remoteUrl: row['remoteUrl'] as String?,
             description: row['description'] as String?),
-        arguments: [statusId],
-        queryableName: 'attachments',
-        isView: false);
+        arguments: [statusId]);
   }
 
   @override
@@ -625,8 +659,7 @@ class _$TimelineDao extends TimelineDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
                   'accountId': item.accountId
-                },
-            changeListener),
+                }),
         _accountEntityInsertionAdapter = InsertionAdapter(
             database,
             'accounts',
@@ -660,8 +693,7 @@ class _$TimelineDao extends TimelineDao {
                   'previewUrl': item.previewUrl,
                   'remoteUrl': item.remoteUrl,
                   'description': item.description
-                },
-            changeListener),
+                }),
         _notificationEntityInsertionAdapter = InsertionAdapter(
             database,
             'notifications',
@@ -671,8 +703,7 @@ class _$TimelineDao extends TimelineDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'accountId': item.accountId,
                   'statusId': item.statusId
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -690,8 +721,8 @@ class _$TimelineDao extends TimelineDao {
       _notificationEntityInsertionAdapter;
 
   @override
-  Stream<List<StatusEntity>> findAllStatuses() {
-    return _queryAdapter.queryListStream(
+  Future<List<StatusEntity>> findAllStatuses() async {
+    return _queryAdapter.queryList(
         'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
@@ -724,14 +755,12 @@ class _$TimelineDao extends TimelineDao {
                 row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String),
-        queryableName: 'statuses',
-        isView: false);
+            accountId: row['accountId'] as String));
   }
 
   @override
-  Stream<StatusEntity?> findStatusById(String id) {
-    return _queryAdapter.queryStream('SELECT * FROM statuses WHERE id = ?1',
+  Future<StatusEntity?> findStatusById(String id) async {
+    return _queryAdapter.query('SELECT * FROM statuses WHERE id = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -764,9 +793,7 @@ class _$TimelineDao extends TimelineDao {
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
@@ -786,9 +813,8 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Stream<StatusEntity?> findStatusReplied(String id) {
-    return _queryAdapter.queryStream(
-        'SELECT * FROM statuses WHERE inReplyTo = ?1',
+  Future<StatusEntity?> findStatusReplied(String id) async {
+    return _queryAdapter.query('SELECT * FROM statuses WHERE inReplyTo = ?1',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -821,9 +847,7 @@ class _$TimelineDao extends TimelineDao {
             reblogId: row['reblogId'] as String?,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String),
-        arguments: [id],
-        queryableName: 'statuses',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
@@ -849,7 +873,30 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Stream<AccountEntity?> findAccountById(String id) {
+  Future<AccountEntity?> findAccountById(String id) async {
+    return _queryAdapter.query('SELECT * FROM accounts WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)),
+        arguments: [id]);
+  }
+
+  @override
+  Stream<AccountEntity?> findAccountByIdStream(String id) {
     return _queryAdapter.queryStream('SELECT * FROM accounts WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AccountEntity(
             id: row['id'] as String,
@@ -874,7 +921,30 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Stream<AccountEntity?> findCurrentAccount() {
+  Future<AccountEntity?> findCurrentAccount() async {
+    return _queryAdapter.query(
+        'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
+        mapper: (Map<String, Object?> row) => AccountEntity(
+            id: row['id'] as String,
+            username: row['username'] as String,
+            displayName: row['displayName'] as String,
+            acct: row['acct'] as String,
+            note: row['note'] as String,
+            url: row['url'] as String,
+            avatar: row['avatar'] as String,
+            avatarStatic: row['avatarStatic'] as String,
+            header: row['header'] as String,
+            headerStatic: row['headerStatic'] as String,
+            followersCount: row['followersCount'] as int,
+            followingCount: row['followingCount'] as int,
+            subscribingCount: row['subscribingCount'] as int?,
+            statusesCount: row['statusesCount'] as int,
+            isBot: row['isBot'] == null ? null : (row['isBot'] as int) != 0,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int)));
+  }
+
+  @override
+  Stream<AccountEntity?> findCurrentAccountStream() {
     return _queryAdapter.queryStream(
         'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')',
         mapper: (Map<String, Object?> row) => AccountEntity(
@@ -899,8 +969,8 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Stream<AttachmentEntity?> findAttachmentById(String id) {
-    return _queryAdapter.queryStream('SELECT * FROM attachments WHERE id = ?1',
+  Future<AttachmentEntity?> findAttachmentById(String id) async {
+    return _queryAdapter.query('SELECT * FROM attachments WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
             statusId: row['statusId'] as String,
             id: row['id'] as String,
@@ -909,14 +979,13 @@ class _$TimelineDao extends TimelineDao {
             previewUrl: row['previewUrl'] as String,
             remoteUrl: row['remoteUrl'] as String?,
             description: row['description'] as String?),
-        arguments: [id],
-        queryableName: 'attachments',
-        isView: false);
+        arguments: [id]);
   }
 
   @override
-  Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId) {
-    return _queryAdapter.queryListStream(
+  Future<List<AttachmentEntity>> findAttachemntsByStatus(
+      String statusId) async {
+    return _queryAdapter.queryList(
         'SELECT * FROM attachments WHERE statusId = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
             statusId: row['statusId'] as String,
@@ -926,22 +995,18 @@ class _$TimelineDao extends TimelineDao {
             previewUrl: row['previewUrl'] as String,
             remoteUrl: row['remoteUrl'] as String?,
             description: row['description'] as String?),
-        arguments: [statusId],
-        queryableName: 'attachments',
-        isView: false);
+        arguments: [statusId]);
   }
 
   @override
-  Stream<List<NotificationEntity>> findAllNotifications() {
-    return _queryAdapter.queryListStream('SELECT * FROM notifications',
+  Future<List<NotificationEntity>> findAllNotifications() async {
+    return _queryAdapter.queryList('SELECT * FROM notifications',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
-            statusId: row['statusId'] as String?),
-        queryableName: 'notifications',
-        isView: false);
+            statusId: row['statusId'] as String?));
   }
 
   @override
@@ -1012,7 +1077,7 @@ class _$NotificationDao extends NotificationDao {
   _$NotificationDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database, changeListener),
+  )   : _queryAdapter = QueryAdapter(database),
         _notificationEntityInsertionAdapter = InsertionAdapter(
             database,
             'notifications',
@@ -1022,8 +1087,7 @@ class _$NotificationDao extends NotificationDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'accountId': item.accountId,
                   'statusId': item.statusId
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -1035,16 +1099,14 @@ class _$NotificationDao extends NotificationDao {
       _notificationEntityInsertionAdapter;
 
   @override
-  Stream<List<NotificationEntity>> findAllNotifications() {
-    return _queryAdapter.queryListStream('SELECT * FROM notifications',
+  Future<List<NotificationEntity>> findAllNotifications() async {
+    return _queryAdapter.queryList('SELECT * FROM notifications',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
-            statusId: row['statusId'] as String?),
-        queryableName: 'notifications',
-        isView: false);
+            statusId: row['statusId'] as String?));
   }
 
   @override

@@ -8,10 +8,10 @@ abstract class StatusDao {
   WHERE isReblogged IS false AND inReplyToId IS NULL
   ORDER BY createdAt DESC
   ''')
-  Stream<List<StatusEntity>> findAllStatuses();
+  Future<List<StatusEntity>> findAllStatuses();
 
   @Query('SELECT * FROM statuses WHERE id = :id')
-  Stream<StatusEntity?> findStatusById(String id);
+  Future<StatusEntity?> findStatusById(String id);
 
   @Query('''
   WITH RECURSIVE 
@@ -59,7 +59,7 @@ abstract class StatusDao {
   Future<List<StatusEntity>> findStatusRepliesAncestors(String id);
 
   @Query('SELECT * FROM statuses WHERE inReplyTo = :id')
-  Stream<StatusEntity?> findStatusReplied(String id);
+  Future<StatusEntity?> findStatusReplied(String id);
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertStatus(StatusEntity status);

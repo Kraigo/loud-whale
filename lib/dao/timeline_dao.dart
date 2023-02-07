@@ -44,13 +44,16 @@ abstract class TimelineDao
     NotificationEntity? notification,
   ) async {
     if (notification == null) return null;
-    notification.account = await findAccountById(notification.accountId).first;
+
+    notification.account = await findAccountById(notification.accountId);
+
     if (notification.statusId != null) {
-      notification.status = await findStatusById(notification.statusId!).first;
+      notification.status = await findStatusById(notification.statusId!);
     }
+
     if (notification.status?.accountId != null) {
       notification.status!.account =
-          await findAccountById(notification.status!.accountId).first;
+          await findAccountById(notification.status!.accountId);
     }
 
     return notification;
@@ -61,15 +64,17 @@ abstract class TimelineDao
   ) async {
     if (status == null) return null;
 
-    status.account = await findAccountById(status.accountId).first;
+    status.account = await findAccountById(status.accountId);
+
     if (status.reblogId != null) {
-      status.reblog = await findStatusById(status.reblogId!).first;
+      status.reblog = await findStatusById(status.reblogId!);
     }
+
     if (status.reblog?.accountId != null) {
       status.reblog!.account =
-          await findAccountById(status.reblog!.accountId).first;
+          await findAccountById(status.reblog!.accountId);
     }
-    status.mediaAttachments = await findAttachemntsByStatus(status.id).first;
+    status.mediaAttachments = await findAttachemntsByStatus(status.id);
 
     return status;
   }

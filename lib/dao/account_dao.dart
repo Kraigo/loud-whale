@@ -7,11 +7,18 @@ abstract class AccountDao {
   Future<List<AccountEntity>> findAllAccountes();
 
   @Query('SELECT * FROM accounts WHERE id = :id')
-  Stream<AccountEntity?> findAccountById(String id);
+  Future<AccountEntity?> findAccountById(String id);
+
+  @Query('SELECT * FROM accounts WHERE id = :id')
+  Stream<AccountEntity?> findAccountByIdStream(String id);
 
   @Query(
       'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')')
-  Stream<AccountEntity?> findCurrentAccount();
+  Future<AccountEntity?> findCurrentAccount();
+
+  @Query(
+      'SELECT * FROM accounts WHERE id IN (SELECT value FROM settings WHERE settings.name = \'userId\')')
+  Stream<AccountEntity?> findCurrentAccountStream();
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertAccount(AccountEntity account);

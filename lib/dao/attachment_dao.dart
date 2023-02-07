@@ -5,10 +5,10 @@ import 'package:mastodon/enties/entries.dart';
 @dao
 abstract class AttachmentDao {
   @Query('SELECT * FROM attachments WHERE id = :id')
-  Stream<AttachmentEntity?> findAttachmentById(String id);
+  Future<AttachmentEntity?> findAttachmentById(String id);
 
   @Query('SELECT * FROM attachments WHERE statusId = :statusId')
-  Stream<List<AttachmentEntity>> findAttachemntsByStatus(String statusId);
+  Future<List<AttachmentEntity>> findAttachemntsByStatus(String statusId);
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertAttachment(AttachmentEntity attachment);

@@ -20,7 +20,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   _loadInitial() async {
-    context.read<NotificationsProvider>().loadNotifications();
+    await context.read<NotificationsProvider>().refresh();
+    await context.read<NotificationsProvider>().loadNotifications();
   }
 
   @override

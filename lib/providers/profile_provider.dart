@@ -7,18 +7,17 @@ import 'package:mastodon/helpers/mastodon_helper.dart';
 class ProfileProvider extends ChangeNotifier {
   AccountDao accountDao;
   SettingDao settingDao;
+
+  AccountEntity? _profile;
+  AccountEntity? get profile => _profile;
+
   ProfileProvider({
     required this.accountDao,
     required this.settingDao,
   });
 
-  verifyAccount() async {
-    try {
-      final resp =
-          await MastodonHelper.api?.v1.accounts.verifyAccountCredentials();
-      if (resp != null) {
-        await accountDao.insertAccount(AccountEntity.fromModel(resp.data));
-      }
-    } catch (_) {}
+  refresh() async {
+    _profile = await accountDao.findCurrentAccount();
+    notifyListeners();
   }
 }

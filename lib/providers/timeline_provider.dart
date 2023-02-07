@@ -25,6 +25,14 @@ class TimelineProvider extends ChangeNotifier {
     required this.timelineDao,
   });
 
+  refresh() async {
+    _statuses = await statusDao.findAllStatuses();
+    for (var s in _statuses) {
+      await timelineDao.populateStatus(s);
+    }
+    notifyListeners();
+  }
+
   loadTimeline() async {
     _loading = true;
     notifyListeners();
@@ -33,11 +41,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
       if (resp != null) {
         await timelineDao.saveTimelineStatuses(resp.data);
-
-        _statuses = await statusDao.findAllStatuses().first;
-        for (var s in _statuses) {
-          await timelineDao.populateStatus(s);
-        }
+        await refresh();
       }
     } finally {
       _loading = false;

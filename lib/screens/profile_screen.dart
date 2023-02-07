@@ -35,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     stream: context
                         .read<AppDatabase>()
                         .accountDao
-                        .findAccountById(widget.accountId),
+                        .findAccountByIdStream(widget.accountId),
                     builder: (context, snapshot) {
                       final account = snapshot.data;
                       if (account == null) {

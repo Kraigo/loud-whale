@@ -34,8 +34,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       body: Column(
         children: [
           StreamBuilder(
-              stream:
-                  context.read<AppDatabase>().accountDao.findCurrentAccount(),
+              stream: context
+                  .read<AppDatabase>()
+                  .accountDao
+                  .findCurrentAccountStream(),
               builder: (context, snapshot) {
                 if (snapshot.data == null) return Container();
                 return AccountCard(snapshot.data!);
