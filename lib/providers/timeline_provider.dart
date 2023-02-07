@@ -55,6 +55,20 @@ class TimelineProvider extends ChangeNotifier {
           .createFavourite(statusId: statusId);
       if (resp != null) {
         await timelineDao.saveTimelineStatuses([resp.data]);
+        await refresh();
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  reblogStatus(String statusId) async {
+    try {
+      final resp = await MastodonHelper.api?.v1.statuses
+          .createReblog(statusId: statusId);
+      if (resp != null) {
+        await timelineDao.saveTimelineStatuses([resp.data]);
+        await refresh();
       }
     } finally {
       notifyListeners();

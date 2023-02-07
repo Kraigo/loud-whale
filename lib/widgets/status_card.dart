@@ -87,7 +87,9 @@ class StatusCardActions extends StatelessWidget {
           // style: ButtonStyle(textStyle: Theme.of(context).textTheme.caption),
         ),
         ActionButton(
-          onPressed: () {},
+          onPressed: () async {
+            await context.read<TimelineProvider>().reblogStatus(status.id);
+          },
           icon: Icons.repeat,
           isActivated: status.isReblogged,
           label: status.reblogsCount > 0 ? '${status.reblogsCount}' : '',
