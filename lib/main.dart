@@ -4,6 +4,7 @@ import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/notifications_provider.dart';
+import 'package:mastodon/providers/profile_provider.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/screens/start_screen.dart';
@@ -57,7 +58,12 @@ void main() async {
           timelineDao: database.timelineDao,
         ),
       ),
-      ChangeNotifierProvider(create: (context) => HomeProvider())
+      ChangeNotifierProvider(create: (context) => HomeProvider()),
+      ChangeNotifierProvider(
+        create: (context) => ProfileProvider(
+          accountDao: database.accountDao,
+        ),
+      )
     ],
     child: const MastodonApp(),
   ));
