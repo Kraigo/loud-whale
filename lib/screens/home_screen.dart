@@ -3,6 +3,8 @@ import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/screens/compose_screen.dart';
 import 'package:mastodon/screens/my_profile_screen.dart';
 import 'package:mastodon/screens/notifications_screen.dart';
+import 'package:mastodon/screens/search_screen.dart';
+import 'package:mastodon/screens/preferences_screen.dart';
 import 'package:mastodon/screens/timeline_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -61,7 +63,9 @@ class _MainContent extends StatelessWidget {
       case HomeMenu.compose:
         return const ComposeScreen();
       case HomeMenu.search:
-        return const ComposeScreen();
+        return const SearchScreen();
+      case HomeMenu.preferences:
+        return const PreferencesScreen();
       default:
         return const Center(child: Text("Empty Screen"));
     }

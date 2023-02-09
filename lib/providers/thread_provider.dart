@@ -43,8 +43,6 @@ class ThreadProvider extends ChangeNotifier {
 
   Future<void> loadThread(String statusId) async {
     _loading = true;
-    _ancestors = [];
-    _descendants = [];
     notifyListeners();
 
     try {
@@ -59,6 +57,21 @@ class ThreadProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadStatus(String statusId) async {
+    try {
+      final resp = await MastodonHelper.api?.v1.statuses
+          .lookupStatus(statusId: statusId);
+      if (resp != null) {
+        await timelineDao.saveTimelineStatuses([resp.data]);
+        await refresh(statusId);
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+
   }
 
   clear() {

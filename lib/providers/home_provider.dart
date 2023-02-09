@@ -6,7 +6,8 @@ enum HomeMenu {
       'Notifications', Icons.notifications_outlined, Icons.notifications),
   search('Search', Icons.search_outlined, Icons.search),
   profile('Profile', Icons.person_outline, Icons.person),
-  compose('Compose', Icons.create_outlined, Icons.create);
+  compose('Compose', Icons.create_outlined, Icons.create),
+  preferences('Preferences', Icons.more_horiz, Icons.more_horiz);
 
   final String label;
   final IconData icon;
@@ -22,6 +23,7 @@ class HomeProvider extends ChangeNotifier {
     HomeMenu.search,
     HomeMenu.profile,
     HomeMenu.compose,
+    HomeMenu.preferences
   ];
   int _selectedIndex = 0;
   int get selectedIndex => _selectedIndex;

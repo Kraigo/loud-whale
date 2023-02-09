@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
+import 'package:mastodon/base/store_key.dart';
+import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
+import 'package:mastodon/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class ComposeScreen extends StatefulWidget {
@@ -17,12 +21,19 @@ class _ComposeScreenState extends State<ComposeScreen> {
   void initState() {
     _textController = TextEditingController();
     super.initState();
+    Future.microtask(_loadInitial);
   }
 
   @override
   void dispose() {
     _textController?.dispose();
     super.dispose();
+  }
+
+  _loadInitial() async {
+    final settingsProvider = context.read<SettingsProvider>();
+    await settingsProvider.refresh();
+    await settingsProvider.loadInstanceSettings();
   }
 
   _onCompose() async {
@@ -34,6 +45,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const Text("Compose"),
@@ -46,11 +58,16 @@ class _ComposeScreenState extends State<ComposeScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(children: [
           TextField(
+            enabled: settingsProvider.statusMaxLength > 0,
+            maxLength: settingsProvider.statusMaxLength > 0
+                ? settingsProvider.statusMaxLength
+                : null,
             minLines: 5,
             maxLines: 10,
             decoration: InputDecoration(
               hintText: 'What\'s on your mind?',
-              counterText: '${_textController?.text.length ?? 0} characters',
+              counterText:
+                  '${settingsProvider.statusMaxLength - (_textController?.text.length ?? 0)} characters',
               border: const OutlineInputBorder(),
             ),
             onChanged: (_) {

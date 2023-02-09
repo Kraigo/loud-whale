@@ -14,7 +14,7 @@ class StatusMedia extends StatelessWidget {
         page: HeroPhotoViewRouteWrapper(
           heroTag: attachment.id,
           imageProvider: NetworkImage(
-            attachment.previewUrl,
+            attachment.url,
           ),
         ),
       ),

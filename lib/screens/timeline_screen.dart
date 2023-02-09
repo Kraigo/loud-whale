@@ -19,8 +19,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   _loadInitial() async {
-    await context.read<TimelineProvider>().refresh();
-    await context.read<TimelineProvider>().loadTimeline();
+    final timelineProvider = context.read<TimelineProvider>();
+    await timelineProvider.refresh();
+    await timelineProvider.loadTimeline();
   }
 
   Future<void> _pullRefresh() async {

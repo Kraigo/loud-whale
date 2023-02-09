@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/status_entity.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
@@ -23,10 +24,15 @@ class _ThreadScreenState extends State<ThreadScreen> {
   }
 
   _loadInitial() async {
-    await context.read<ThreadProvider>().refresh(widget.statusId);
-    await context.read<ThreadProvider>().loadThread(widget.statusId);
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => Scrollable.ensureVisible(originalStatusKey.currentContext!));
+    final threadProvider = context.read<ThreadProvider>();
+    await threadProvider.refresh(widget.statusId);
+    await threadProvider.loadStatus(widget.statusId);
+    await threadProvider.loadThread(widget.statusId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (originalStatusKey.currentContext != null) {
+        Scrollable.ensureVisible(originalStatusKey.currentContext!);
+      }
+    });
   }
 
   @override

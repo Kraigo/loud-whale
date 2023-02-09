@@ -25,4 +25,7 @@ abstract class AccountDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertAccounts(List<AccountEntity> accounts);
+
+  @Query('DELETE FROM accounts')
+  Future<void> deleteAllAccounts();
 }

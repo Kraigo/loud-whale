@@ -5,7 +5,11 @@ import 'package:mastodon/enties/entries.dart';
 abstract class StatusDao {
   @Query('''
   SELECT * FROM statuses
-  WHERE isReblogged IS false AND inReplyToId IS NULL
+  WHERE isReblogged IS false
+    AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)
+    AND id NOT IN (
+      SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id
+    )
   ORDER BY createdAt DESC
   ''')
   Future<List<StatusEntity>> findAllStatuses();
@@ -66,4 +70,7 @@ abstract class StatusDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertStatuses(List<StatusEntity> statuses);
+
+  @Query('DELETE FROM statuses')
+  Future<void> deleteAllStatuses();
 }

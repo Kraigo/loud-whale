@@ -23,9 +23,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     await context.read<AuthorizationProvider>().verifyAccount();
   }
 
-  _onLogout() {
-    Navigator.of(context).pushNamed(Routes.logout);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +39,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 if (snapshot.data == null) return Container();
                 return AccountCard(snapshot.data!);
               }),
-          ElevatedButton(onPressed: _onLogout, child: const Text("Logout")),
         ],
       ),
     );

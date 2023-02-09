@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:provider/provider.dart';
@@ -18,8 +19,18 @@ class _LogoutScreenState extends State<LogoutScreen> {
   }
 
   _logout() async {
+    final database = context.read<AppDatabase>();
+    final navigator = Navigator.of(context);
     await context.read<AuthorizationProvider>().removeAuthorization();
-    await Navigator.of(context).pushNamedAndRemoveUntil(
+
+    await database.accountDao.deleteAllAccounts();
+    await database.attachmentDao.deleteAllAttachments();
+    await database.notificationDao.deleteAllNotifications();
+    await database.relationshipDao.deleteAllRelationships();
+    await database.settingDao.deleteAllSettings();
+    await database.statusDao.deleteAllStatuses();
+
+    await navigator.pushNamedAndRemoveUntil(
         Routes.start, ModalRoute.withName(Routes.start));
   }
 

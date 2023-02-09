@@ -15,4 +15,7 @@ abstract class RelationshipDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertRelationship(RelationshipEntity account);
+
+  @Query('DELETE FROM relationships')
+  Future<void> deleteAllRelationships();
 }

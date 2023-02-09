@@ -109,6 +109,9 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `relationships` (`id` TEXT NOT NULL, `isFollowing` INTEGER NOT NULL, `isFollowed` INTEGER NOT NULL, `isBlocking` INTEGER NOT NULL, `isBlocked` INTEGER NOT NULL, `isMuting` INTEGER NOT NULL, `accountId` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
+        await database.execute(
+            'CREATE VIEW IF NOT EXISTS `DATABASE_INFO` AS SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();');
+
         await callback?.onCreate?.call(database, version);
       },
     );
@@ -206,7 +209,7 @@ class _$StatusDao extends StatusDao {
   @override
   Future<List<StatusEntity>> findAllStatuses() async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -334,6 +337,11 @@ class _$StatusDao extends StatusDao {
   }
 
   @override
+  Future<void> deleteAllStatuses() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM statuses');
+  }
+
+  @override
   Future<void> insertStatus(StatusEntity status) async {
     await _statusEntityInsertionAdapter.insert(
         status, OnConflictStrategy.replace);
@@ -387,9 +395,32 @@ class _$SettingDao extends SettingDao {
   }
 
   @override
+  Future<DatabaseInfo?> findDatabaseSize() async {
+    return _queryAdapter.query('SELECT * FROM DATABASE_INFO',
+        mapper: (Map<String, Object?> row) =>
+            DatabaseInfo(size: row['size'] as int));
+  }
+
+  @override
+  Future<void> deleteAllSettings() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM settings');
+  }
+
+  @override
+  Future<void> vacuum() async {
+    await _queryAdapter.queryNoReturn('vacuum');
+  }
+
+  @override
   Future<void> insertSetting(SettingEntity setting) async {
     await _settingEntityInsertionAdapter.insert(
         setting, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertSettings(List<SettingEntity> settings) async {
+    await _settingEntityInsertionAdapter.insertList(
+        settings, OnConflictStrategy.replace);
   }
 }
 
@@ -548,6 +579,11 @@ class _$AccountDao extends AccountDao {
   }
 
   @override
+  Future<void> deleteAllAccounts() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM accounts');
+  }
+
+  @override
   Future<void> insertAccount(AccountEntity account) async {
     await _accountEntityInsertionAdapter.insert(
         account, OnConflictStrategy.replace);
@@ -614,6 +650,11 @@ class _$AttachmentDao extends AttachmentDao {
             remoteUrl: row['remoteUrl'] as String?,
             description: row['description'] as String?),
         arguments: [statusId]);
+  }
+
+  @override
+  Future<void> deleteAllAttachments() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM attachments');
   }
 
   @override
@@ -733,7 +774,7 @@ class _$TimelineDao extends TimelineDao {
   @override
   Future<List<StatusEntity>> findAllStatuses() async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE isReblogged IS false AND inReplyToId IS NULL   ORDER BY createdAt DESC',
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -861,6 +902,11 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAllStatuses() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM statuses');
+  }
+
+  @override
   Future<List<AccountEntity>> findAllAccountes() async {
     return _queryAdapter.queryList('SELECT * FROM accounts',
         mapper: (Map<String, Object?> row) => AccountEntity(
@@ -979,6 +1025,11 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAllAccounts() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM accounts');
+  }
+
+  @override
   Future<AttachmentEntity?> findAttachmentById(String id) async {
     return _queryAdapter.query('SELECT * FROM attachments WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
@@ -1009,6 +1060,11 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAllAttachments() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM attachments');
+  }
+
+  @override
   Future<List<NotificationEntity>> findAllNotifications() async {
     return _queryAdapter.queryList('SELECT * FROM notifications',
         mapper: (Map<String, Object?> row) => NotificationEntity(
@@ -1017,6 +1073,11 @@ class _$TimelineDao extends TimelineDao {
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
             statusId: row['statusId'] as String?));
+  }
+
+  @override
+  Future<void> deleteAllNotifications() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
   }
 
   @override
@@ -1120,6 +1181,11 @@ class _$NotificationDao extends NotificationDao {
   }
 
   @override
+  Future<void> deleteAllNotifications() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
+  }
+
+  @override
   Future<void> insertNotification(NotificationEntity notification) async {
     await _notificationEntityInsertionAdapter.insert(
         notification, OnConflictStrategy.replace);
@@ -1201,6 +1267,11 @@ class _$RelationshipDao extends RelationshipDao {
             isMuting: (row['isMuting'] as int) != 0,
             accountId: row['accountId'] as String),
         arguments: [accountId]);
+  }
+
+  @override
+  Future<void> deleteAllRelationships() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM relationships');
   }
 
   @override

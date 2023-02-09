@@ -15,4 +15,7 @@ abstract class AttachmentDao {
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertAttachments(List<AttachmentEntity> attachments);
+
+  @Query('DELETE FROM attachments')
+  Future<void> deleteAllAttachments();
 }

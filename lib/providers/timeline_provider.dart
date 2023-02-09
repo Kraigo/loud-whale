@@ -48,6 +48,19 @@ class TimelineProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  
+  unfavoriteStatus(String statusId) async {
+    try {
+      final resp = await MastodonHelper.api?.v1.statuses
+          .destroyFavourite(statusId: statusId);
+      if (resp != null) {
+        await timelineDao.saveTimelineStatuses([resp.data]);
+        await refresh();
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
 
   favoriteStatus(String statusId) async {
     try {

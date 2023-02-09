@@ -28,6 +28,9 @@ part 'database.g.dart';
     NotificationEntity,
     RelationshipEntity,
   ],
+  views: [
+    DatabaseInfo,
+  ],
 )
 abstract class AppDatabase extends FloorDatabase {
   StatusDao get statusDao;

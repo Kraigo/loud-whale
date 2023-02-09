@@ -68,6 +68,7 @@ abstract class TimelineDao
 
     if (status.reblogId != null) {
       status.reblog = await findStatusById(status.reblogId!);
+      status.reblog?.mediaAttachments = await findAttachemntsByStatus(status.reblogId!);
     }
 
     if (status.reblog?.accountId != null) {

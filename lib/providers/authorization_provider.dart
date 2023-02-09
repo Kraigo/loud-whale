@@ -66,8 +66,8 @@ class AuthorizationProvider extends ChangeNotifier {
 
     await settingDao.insertSetting(SettingEntity(
         name: StorageKeys.instanceName.storageKey, value: auth.instance));
-    await settingDao.insertSetting(
-        SettingEntity(name: StorageKeys.accessToken.storageKey, value: auth.token));
+    await settingDao.insertSetting(SettingEntity(
+        name: StorageKeys.accessToken.storageKey, value: auth.token));
     await checkAuthorization();
   }
 
@@ -137,8 +137,8 @@ class AuthorizationProvider extends ChangeNotifier {
           await MastodonHelper.api?.v1.accounts.verifyAccountCredentials();
       if (resp != null) {
         await accountDao.insertAccount(AccountEntity.fromModel(resp.data));
-        await settingDao.insertSetting(
-            SettingEntity(name: StorageKeys.userId.storageKey, value: resp.data.id));
+        await settingDao.insertSetting(SettingEntity(
+            name: StorageKeys.userId.storageKey, value: resp.data.id));
       }
     } catch (_) {}
   }

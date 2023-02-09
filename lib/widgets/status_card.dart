@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
+import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -46,6 +47,7 @@ class StatusCardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -96,7 +98,13 @@ class StatusCardActions extends StatelessWidget {
         ),
         ActionButton(
           onPressed: () async {
-            await context.read<TimelineProvider>().favoriteStatus(status.id);
+            if (status.isFavourited == true) {
+              await context
+                  .read<TimelineProvider>()
+                  .unfavoriteStatus(status.id);
+            } else {
+              await context.read<TimelineProvider>().favoriteStatus(status.id);
+            }
           },
           icon: status.isFavourited == true ? Icons.star : Icons.star_border,
           isActivated: status.isFavourited,
