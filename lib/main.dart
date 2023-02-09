@@ -62,6 +62,7 @@ void main() async {
       ChangeNotifierProvider(
         create: (context) => ProfileProvider(
           accountDao: database.accountDao,
+          relationshipDao: database.relationshipDao
         ),
       )
     ],

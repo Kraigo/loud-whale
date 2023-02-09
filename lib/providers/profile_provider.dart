@@ -1,29 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/dao/account_dao.dart';
-import 'package:mastodon/dao/setting_dao.dart';
-import 'package:mastodon/enties/account_entity.dart';
+import 'package:mastodon/dao/relationship_dao.dart';
+import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/helpers/mastodon_helper.dart';
-import 'package:mastodon_api/src/service/entities/relationship.dart';
 
 class ProfileProvider extends ChangeNotifier {
   bool _loading = false;
   bool get loading => _loading;
 
   AccountDao accountDao;
+  RelationshipDao relationshipDao;
 
   AccountEntity? _profile;
   AccountEntity? get profile => _profile;
 
-  Relationship? _relationship;
-  Relationship? get relationship => _relationship;
+  RelationshipEntity? _relationship;
+  RelationshipEntity? get relationship => _relationship;
 
   ProfileProvider({
     required this.accountDao,
+    required this.relationshipDao,
   });
 
-  refresh() async {
-    _profile = await accountDao.findCurrentAccount();
+  refresh(String accountId) async {
+    _profile = await accountDao.findAccountById(accountId);
+    _profile?.relationship =
+        await relationshipDao.findRelationshipByAccountId(accountId);
     notifyListeners();
+  }
+
+  Future<void> loadProfile(String accountId) async {
+    _loading = true;
+    notifyListeners();
+    try {
+      final resp = await MastodonHelper.api?.v1.accounts
+          .lookupAccount(accountId: accountId);
+      if (resp != null) {
+        final account = AccountEntity.fromModel(resp.data);
+        await accountDao.insertAccount(account);
+      }
+      await refresh(accountId);
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   follow(String accountId) async {
@@ -38,8 +58,12 @@ class ProfileProvider extends ChangeNotifier {
     try {
       final resp = await MastodonHelper.api?.v1.accounts
           .lookupRelationships(accountIds: [accountId]);
-
-      _relationship = resp?.data.first;
+      if (resp != null) {
+        final relationship =
+            RelationshipEntity.fromModel(accountId, resp.data.first);
+        await relationshipDao.insertRelationship(relationship);
+      }
+      await refresh(accountId);
     } finally {
       notifyListeners();
     }

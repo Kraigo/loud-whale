@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/account_entity.dart';
+import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/profile_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
@@ -24,33 +25,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   _loadInitial() async {
     final profileProvider = context.read<ProfileProvider>();
+    await profileProvider.refresh(widget.accountId);
+    await profileProvider.loadProfile(widget.accountId);
     await profileProvider.loadRelationship(widget.accountId);
   }
 
   @override
   Widget build(BuildContext context) {
+    final accountProvider = context.watch<ProfileProvider>();
     return Scaffold(
-        appBar: AppBar(title: const Text('Profile'),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(3.0),
-          child: _ProfileLoading(),
-        ),),
+        appBar: AppBar(
+          title: const Text('Profile'),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(3.0),
+            child: _ProfileLoading(),
+          ),
+        ),
         body: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-                child: StreamBuilder(
-                    stream: context
-                        .read<AppDatabase>()
-                        .accountDao
-                        .findAccountByIdStream(widget.accountId),
-                    builder: (context, snapshot) {
-                      final account = snapshot.data;
-                      if (account == null) {
-                        return const Text("NO ACCOUNT!");
-                      }
-
-                      return ProfileHeader(account);
-                    }))
+            if (accountProvider.profile != null)
+              SliverToBoxAdapter(child: ProfileHeader(accountProvider.profile!))
           ],
         ));
   }
@@ -88,7 +82,7 @@ class ProfileHeader extends StatelessWidget {
                     ],
                   ),
                   Spacer(),
-                  ElevatedButton(onPressed: () {}, child: Text('Follow'))
+                  _buildFollowingButton()
                 ],
               ),
               Html(data: account.note),
@@ -134,6 +128,17 @@ class ProfileHeader extends StatelessWidget {
         )
       ],
     );
+  }
+
+  Widget _buildFollowingButton() {
+    if (account.relationship?.isFollowing == true) {
+      return TextButton.icon(
+        onPressed: () {},
+        label: Text('Following'),
+        icon: Icon(Icons.check),
+      );
+    }
+    return ElevatedButton(onPressed: () {}, child: Text('Follow'));
   }
 }
 

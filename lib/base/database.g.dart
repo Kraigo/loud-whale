@@ -73,6 +73,8 @@ class _$AppDatabase extends AppDatabase {
 
   NotificationDao? _notificationDaoInstance;
 
+  RelationshipDao? _relationshipDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -104,6 +106,8 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `statusId` TEXT NOT NULL, `type` INTEGER NOT NULL, `url` TEXT NOT NULL, `previewUrl` TEXT NOT NULL, `remoteUrl` TEXT, `description` TEXT, FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `notifications` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `accountId` TEXT NOT NULL, `statusId` TEXT, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `relationships` (`id` TEXT NOT NULL, `isFollowing` INTEGER NOT NULL, `isFollowed` INTEGER NOT NULL, `isBlocking` INTEGER NOT NULL, `isBlocked` INTEGER NOT NULL, `isMuting` INTEGER NOT NULL, `accountId` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -140,6 +144,12 @@ class _$AppDatabase extends AppDatabase {
   NotificationDao get notificationDao {
     return _notificationDaoInstance ??=
         _$NotificationDao(database, changeListener);
+  }
+
+  @override
+  RelationshipDao get relationshipDao {
+    return _relationshipDaoInstance ??=
+        _$RelationshipDao(database, changeListener);
   }
 }
 
@@ -1120,6 +1130,83 @@ class _$NotificationDao extends NotificationDao {
       List<NotificationEntity> notifications) async {
     await _notificationEntityInsertionAdapter.insertList(
         notifications, OnConflictStrategy.replace);
+  }
+}
+
+class _$RelationshipDao extends RelationshipDao {
+  _$RelationshipDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _relationshipEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'relationships',
+            (RelationshipEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'isFollowing': item.isFollowing ? 1 : 0,
+                  'isFollowed': item.isFollowed ? 1 : 0,
+                  'isBlocking': item.isBlocking ? 1 : 0,
+                  'isBlocked': item.isBlocked ? 1 : 0,
+                  'isMuting': item.isMuting ? 1 : 0,
+                  'accountId': item.accountId
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<RelationshipEntity>
+      _relationshipEntityInsertionAdapter;
+
+  @override
+  Future<List<RelationshipEntity>> findAllRelationships() async {
+    return _queryAdapter.queryList('SELECT * FROM relationships',
+        mapper: (Map<String, Object?> row) => RelationshipEntity(
+            id: row['id'] as String,
+            isFollowing: (row['isFollowing'] as int) != 0,
+            isFollowed: (row['isFollowed'] as int) != 0,
+            isBlocking: (row['isBlocking'] as int) != 0,
+            isBlocked: (row['isBlocked'] as int) != 0,
+            isMuting: (row['isMuting'] as int) != 0,
+            accountId: row['accountId'] as String));
+  }
+
+  @override
+  Future<RelationshipEntity?> findRelationshipById(String id) async {
+    return _queryAdapter.query('SELECT * FROM relationships WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => RelationshipEntity(
+            id: row['id'] as String,
+            isFollowing: (row['isFollowing'] as int) != 0,
+            isFollowed: (row['isFollowed'] as int) != 0,
+            isBlocking: (row['isBlocking'] as int) != 0,
+            isBlocked: (row['isBlocked'] as int) != 0,
+            isMuting: (row['isMuting'] as int) != 0,
+            accountId: row['accountId'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Future<RelationshipEntity?> findRelationshipByAccountId(
+      String accountId) async {
+    return _queryAdapter.query(
+        'SELECT * FROM relationships WHERE accountId = ?1',
+        mapper: (Map<String, Object?> row) => RelationshipEntity(
+            id: row['id'] as String,
+            isFollowing: (row['isFollowing'] as int) != 0,
+            isFollowed: (row['isFollowed'] as int) != 0,
+            isBlocking: (row['isBlocking'] as int) != 0,
+            isBlocked: (row['isBlocked'] as int) != 0,
+            isMuting: (row['isMuting'] as int) != 0,
+            accountId: row['accountId'] as String),
+        arguments: [accountId]);
+  }
+
+  @override
+  Future<void> insertRelationship(RelationshipEntity account) async {
+    await _relationshipEntityInsertionAdapter.insert(
+        account, OnConflictStrategy.replace);
   }
 }
 

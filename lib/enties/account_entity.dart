@@ -1,4 +1,5 @@
 import 'package:floor/floor.dart';
+import 'package:mastodon/enties/relationship_entity.dart';
 import 'package:mastodon_api/mastodon_api.dart';
 
 @Entity(tableName: 'accounts')
@@ -21,6 +22,9 @@ class AccountEntity {
   bool? isBot;
   // DateTime? lastStatusAt;
   DateTime createdAt;
+
+  @ignore
+  RelationshipEntity? relationship;
 
   AccountEntity(
       {required this.id,

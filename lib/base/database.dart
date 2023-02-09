@@ -1,6 +1,7 @@
 // required package imports
 import 'dart:async';
 // ignore: depend_on_referenced_packages
+import 'package:mastodon/dao/relationship_dao.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:floor/floor.dart';
 import 'package:mastodon/dao/account_dao.dart';
@@ -24,7 +25,8 @@ part 'database.g.dart';
     StatusEntity,
     SettingEntity,
     AttachmentEntity,
-    NotificationEntity
+    NotificationEntity,
+    RelationshipEntity,
   ],
 )
 abstract class AppDatabase extends FloorDatabase {
@@ -34,4 +36,5 @@ abstract class AppDatabase extends FloorDatabase {
   AttachmentDao get attachmentDao;
   TimelineDao get timelineDao;
   NotificationDao get notificationDao;
+  RelationshipDao get relationshipDao;
 }
