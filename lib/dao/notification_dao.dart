@@ -3,7 +3,10 @@ import 'package:mastodon/enties/notification_entity.dart';
 
 @dao
 abstract class NotificationDao {
-  @Query('SELECT * FROM notifications')
+  @Query('''
+    SELECT * FROM notifications
+    ORDER BY createdAt DESC
+  ''')
   Future<List<NotificationEntity>> findAllNotifications();
 
   @Insert(onConflict: OnConflictStrategy.replace)

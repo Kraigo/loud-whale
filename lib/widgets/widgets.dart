@@ -9,3 +9,4 @@ export 'account_card.dart';
 export 'media_video.dart';
 export 'media_gif.dart';
 export 'media_gallery.dart';
+export 'notification_card.dart';

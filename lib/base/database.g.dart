@@ -1066,7 +1066,8 @@ class _$TimelineDao extends TimelineDao {
 
   @override
   Future<List<NotificationEntity>> findAllNotifications() async {
-    return _queryAdapter.queryList('SELECT * FROM notifications',
+    return _queryAdapter.queryList(
+        'SELECT * FROM notifications     ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,
@@ -1171,7 +1172,8 @@ class _$NotificationDao extends NotificationDao {
 
   @override
   Future<List<NotificationEntity>> findAllNotifications() async {
-    return _queryAdapter.queryList('SELECT * FROM notifications',
+    return _queryAdapter.queryList(
+        'SELECT * FROM notifications     ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,

@@ -24,4 +24,8 @@ class AppTheme {
     700: Color(0xFFC0C0FF),
   });
   static const int _purpleAccentValue = 0xFFFFFFFF;
+
+  static const Color favouriteColor = Color(0xffca8f04);
+  static const Color followColor = Color(0xff8c8dff);
+  static const Color reblogColor = Color.fromARGB(255, 20, 156, 34);
 }
