@@ -19,8 +19,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   _loadInitial() async {
-    await context.read<NotificationsProvider>().refresh();
-    await context.read<NotificationsProvider>().loadNotifications();
+    final notificationsProvider = context.read<NotificationsProvider>();
+    await notificationsProvider.refresh();
+    await notificationsProvider.loadNotifications();
   }
 
   @override
@@ -63,7 +64,7 @@ class NotificationCard extends StatelessWidget {
               width: 10,
             ),
             Text(
-                '${notification.account!.displayName ?? 'User'} $notificationTypeText')
+                '${notification.account?.displayName ?? 'User'} $notificationTypeText')
           ]),
         if (notification.status != null)
           Padding(

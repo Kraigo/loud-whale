@@ -6,6 +6,8 @@ import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class StatusCard extends StatelessWidget {
   final StatusEntity status;
@@ -25,7 +27,8 @@ class StatusCard extends StatelessWidget {
       child: Column(children: [
         if (reblog != null) StatusCardReblogged(reblog!.account!),
         StatusCardContent(status),
-        StatusMedia(status.mediaAttachments ?? []),
+        if (status.mediaAttachments?.isNotEmpty ?? false)
+          StatusMedia(status.mediaAttachments ?? []),
         const SizedBox(
           height: 10,
         ),
@@ -43,6 +46,9 @@ class StatusCardContent extends StatelessWidget {
     await Navigator.of(context)
         .pushNamed(Routes.thread, arguments: {'statusId': status.id});
   }
+  _openLink(String url) async {
+    await launchUrlString(url);
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +73,9 @@ class StatusCardContent extends StatelessWidget {
               data: status.content,
               onLinkTap: (url, context, attributes, element) {
                 debugPrint(url);
+                if (url != null) {
+                  _openLink(url);
+                }
               }),
         ),
       ],
