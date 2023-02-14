@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/utils/fade_route.dart';
-import 'package:photo_view/photo_view.dart';
+import 'package:mastodon/widgets/widgets.dart';
 
 class StatusMedia extends StatelessWidget {
   final List<AttachmentEntity> attachments;
@@ -11,11 +11,10 @@ class StatusMedia extends StatelessWidget {
     Navigator.push(
       context,
       FadeRoute(
-        page: HeroPhotoViewRouteWrapper(
+        page: MediaGallery(
           heroTag: attachment.id,
-          imageProvider: NetworkImage(
-            attachment.url,
-          ),
+          images: attachments,
+          selectedIndex: attachments.indexOf(attachment),
         ),
       ),
     );
@@ -35,13 +34,38 @@ class StatusMedia extends StatelessWidget {
     return GestureDetector(
       onTap: () => {_previewImage(context, attachment)},
       child: StatusMediaPlaceholder(
-          child: Hero(
-              tag: attachment.id,
-              child: Image.network(
-                attachment.previewUrl,
-                alignment: const Alignment(0.5, 0.5),
-                fit: BoxFit.fitWidth,
-              ))),
+          child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Hero(
+            tag: attachment.id,
+            child: Image.network(
+              attachment.previewUrl,
+              alignment: const Alignment(0.5, 0.5),
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+          Positioned(
+            left: 5,
+            bottom: 5,
+            child: _buildAttachmentLabel(attachment),
+          )
+        ],
+      )),
+    );
+  }
+
+  Widget _buildAttachmentLabel(AttachmentEntity attachment) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(
+        ['unknown', 'image', 'gif', 'video', 'audio'][attachment.type].toUpperCase(),
+        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
+      ),
     );
   }
 }
@@ -62,57 +86,6 @@ class StatusMediaPlaceholder extends StatelessWidget {
           child: child,
         ),
       ),
-    );
-  }
-}
-
-class HeroPhotoViewRouteWrapper extends StatelessWidget {
-  final ImageProvider imageProvider;
-  final BoxDecoration? backgroundDecoration;
-  final String? heroTag;
-  final dynamic minScale;
-  final dynamic maxScale;
-
-  const HeroPhotoViewRouteWrapper({
-    required this.imageProvider,
-    this.backgroundDecoration,
-    this.heroTag,
-    this.minScale,
-    this.maxScale,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-          constraints: BoxConstraints.expand(
-            height: MediaQuery.of(context).size.height,
-          ),
-          child: Stack(
-            children: [
-              PhotoView(
-                imageProvider: imageProvider,
-                backgroundDecoration: backgroundDecoration,
-                minScale: PhotoViewComputedScale.contained * 1,
-                maxScale: PhotoViewComputedScale.covered * 1.5,
-                heroAttributes: heroTag != null
-                    ? PhotoViewHeroAttributes(tag: heroTag!)
-                    : null,
-              ),
-              Positioned(
-                left: 10,
-                top: 10,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  label: Text("Close"),
-                  icon: Icon(Icons.close),
-                ),
-              ),
-            ],
-          )),
     );
   }
 }
