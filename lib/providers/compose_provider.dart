@@ -13,13 +13,15 @@ class ComposeProvider extends ChangeNotifier {
     required this.statusDao,
   });
 
-  Future<void> publishStatus(String text) async {
+  Future<void> publishStatus(String text, {String? replyId}) async {
     _loading = true;
     notifyListeners();
 
     try {
-      final resp =
-          await MastodonHelper.api?.v1.statuses.createStatus(text: text);
+      final resp = await MastodonHelper.api?.v1.statuses.createStatus(
+        text: text,
+        inReplyToStatusId: replyId,
+      );
       if (resp != null) {
         await _saveStatus(resp.data);
       }

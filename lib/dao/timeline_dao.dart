@@ -30,7 +30,7 @@ abstract class TimelineDao
         accountsEntries.add(AccountEntity.fromModel(status.reblog!.account));
         for (var attachment in status.reblog!.mediaAttachments) {
           attachmentsEntries
-              .add(AttachmentEntity.fromModel(status.id, attachment));
+              .add(AttachmentEntity.fromModel(status.reblog!.id, attachment));
         }
       }
     }
@@ -65,17 +65,12 @@ abstract class TimelineDao
     if (status == null) return null;
 
     status.account = await findAccountById(status.accountId);
+    status.mediaAttachments = await findAttachemntsByStatus(status.id);
 
     if (status.reblogId != null) {
       status.reblog = await findStatusById(status.reblogId!);
-      status.reblog?.mediaAttachments = await findAttachemntsByStatus(status.reblogId!);
+      await populateStatus(status.reblog);
     }
-
-    if (status.reblog?.accountId != null) {
-      status.reblog!.account =
-          await findAccountById(status.reblog!.accountId);
-    }
-    status.mediaAttachments = await findAttachemntsByStatus(status.id);
 
     return status;
   }

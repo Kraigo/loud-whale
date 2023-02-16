@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/database.dart';
-import 'package:mastodon/base/store_key.dart';
-import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/settings_provider.dart';
@@ -15,13 +12,62 @@ class ComposeScreen extends StatefulWidget {
 }
 
 class _ComposeScreenState extends State<ComposeScreen> {
+  _onCompose(String text) async {
+    final homeProvider = context.read<HomeProvider>();
+    await context.read<ComposeProvider>().publishStatus(text);
+    homeProvider.selectMenu(HomeMenu.home);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Compose"),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(3.0),
+            child: _ComposeLoading(),
+          ),
+        ),
+        body: ComposeInput(onPublish: _onCompose));
+  }
+}
+
+class ComposeInput extends StatefulWidget {
+  final void Function(String text) onPublish;
+  final String? initialText;
+
+  const ComposeInput({
+    required this.onPublish,
+    this.initialText,
+    super.key,
+  });
+
+  @override
+  State<ComposeInput> createState() => _ComposeInputState();
+}
+
+class _ComposeInputState extends State<ComposeInput> {
   TextEditingController? _textController;
+
+  _loadInitial() async {
+    final settingsProvider = context.read<SettingsProvider>();
+    await settingsProvider.refresh();
+    await settingsProvider.loadInstanceSettings();
+  }
+
+  bool get hasStatusText {
+    return _textController?.text.isNotEmpty ?? false;
+  }
+
+  _onSubmit() {
+    widget.onPublish(_textController?.text ?? '');
+  }
 
   @override
   void initState() {
-    _textController = TextEditingController();
-    super.initState();
+    _textController = TextEditingController(text: widget.initialText);
     Future.microtask(_loadInitial);
+    super.initState();
   }
 
   @override
@@ -30,62 +76,75 @@ class _ComposeScreenState extends State<ComposeScreen> {
     super.dispose();
   }
 
-  _loadInitial() async {
-    final settingsProvider = context.read<SettingsProvider>();
-    await settingsProvider.refresh();
-    await settingsProvider.loadInstanceSettings();
+  @override
+  Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
+    final maxLength = settingsProvider.statusMaxLength;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(children: [
+        Stack(
+          children: [
+            TextField(
+              enabled: maxLength > 0,
+              maxLength: maxLength > 0 ? maxLength : null,
+              minLines: 5,
+              maxLines: 10,
+              decoration: const InputDecoration(
+                hintText: 'What\'s on your mind?',
+                counterText: '',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) {
+                setState(() {});
+              },
+              controller: _textController,
+              autofocus: true,
+            ),
+            if (_textController != null)
+              Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: _ComposeCountLimit(_textController!))
+          ],
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ElevatedButton(
+              onPressed: hasStatusText ? _onSubmit : null,
+              child: const Text('Publish!'),
+            )
+          ],
+        )
+      ]),
+    );
   }
+}
 
-  _onCompose() async {
-    final text = _textController?.text ?? '';
-    final homeProvider = context.read<HomeProvider>();
-    await context.read<ComposeProvider>().publishStatus(text);
-    homeProvider.selectMenu(HomeMenu.home);
-  }
+class _ComposeCountLimit extends StatelessWidget {
+  final TextEditingController controller;
+  const _ComposeCountLimit(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Compose"),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(3.0),
-          child: _ComposeLoading(),
-        ),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          TextField(
-            enabled: settingsProvider.statusMaxLength > 0,
-            maxLength: settingsProvider.statusMaxLength > 0
-                ? settingsProvider.statusMaxLength
-                : null,
-            minLines: 5,
-            maxLines: 10,
-            decoration: InputDecoration(
-              hintText: 'What\'s on your mind?',
-              counterText:
-                  '${settingsProvider.statusMaxLength - (_textController?.text.length ?? 0)} characters',
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (_) {
-              setState(() {});
-            },
-            controller: _textController,
-            autofocus: true,
-          ),
-          ElevatedButton(
-              onPressed: hasStatusText ? _onCompose : null,
-              child: const Text('Publish'))
-        ]),
-      ),
-    );
-  }
+    final theme = Theme.of(context);
+    final maxLength = settingsProvider.statusMaxLength;
+    final currentLength = controller.text.length;
 
-  bool get hasStatusText {
-    return _textController?.text.isNotEmpty ?? false;
+    final text = '${maxLength - (currentLength)} / $maxLength';
+    final dangerLength = (maxLength * 0.9).floor();
+    final isDangerLength = currentLength > dangerLength;
+
+    final textStyle = theme.textTheme.caption!.copyWith(
+      color: isDangerLength ? theme.errorColor : theme.textTheme.caption!.color,
+    );
+
+    return Text(text, style: textStyle);
   }
 }
 

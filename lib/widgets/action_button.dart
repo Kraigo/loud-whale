@@ -18,6 +18,7 @@ class ActionButton extends StatelessWidget {
     final theme = Theme.of(context);
     final iconColor = isActivated ? theme.primaryColor : theme.hintColor;
     return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
         child: Padding(

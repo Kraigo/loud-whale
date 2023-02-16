@@ -5,6 +5,7 @@ import 'package:mastodon/dao/status_dao.dart';
 import 'package:mastodon/dao/timeline_dao.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/helpers/mastodon_helper.dart';
+import 'package:mastodon/helpers/sort_statuses.dart';
 
 class TimelineProvider extends ChangeNotifier {
   bool _loading = false;
@@ -30,6 +31,7 @@ class TimelineProvider extends ChangeNotifier {
     for (var s in _statuses) {
       await timelineDao.populateStatus(s);
     }
+    sortStatusesByReply(_statuses);
     notifyListeners();
   }
 

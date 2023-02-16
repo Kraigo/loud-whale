@@ -1,34 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:mastodon/base/constants.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
+import 'package:mastodon/screens/reply_screen.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class StatusCard extends StatelessWidget {
   final StatusEntity status;
-  final StatusEntity? reblog;
+  // final StatusEntity? reblog;
   final bool showMedia;
   final EdgeInsets padding;
   const StatusCard(
     this.status, {
     this.showMedia = true,
-    this.reblog,
+    // this.reblog,
     this.padding = const EdgeInsets.all(8.0),
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final actualStatus = status.reblog ?? status;
     return Padding(
       padding: padding,
       child: Column(children: [
-        if (reblog != null) StatusCardReblogged(reblog!.account!),
-        StatusCardContent(status),
-        if (status.mediaAttachments?.isNotEmpty ?? false)
-          StatusMedia(status.mediaAttachments ?? []),
+        if (status.reblog != null) StatusCardReblogged(status.account!),
+        StatusCardContent(actualStatus),
+        if (actualStatus.mediaAttachments?.isNotEmpty ?? false)
+          StatusMedia(actualStatus.mediaAttachments ?? []),
         const SizedBox(
           height: 10,
         ),
@@ -92,40 +95,56 @@ class StatusCardActions extends StatelessWidget {
   final StatusEntity status;
   const StatusCardActions(this.status, {super.key});
 
+  _onReply(BuildContext context) async {
+    final timelineProvider = context.read<TimelineProvider>();
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ReplyDialog(
+            status: status,
+          );
+        });
+
+    await timelineProvider.refresh();
+  }
+
+  _onReblog(BuildContext context) async {
+    await context.read<TimelineProvider>().reblogStatus(status.id);
+  }
+
+  _onFavourute(BuildContext context) async {
+    if (status.isFavourited == true) {
+      await context.read<TimelineProvider>().unfavoriteStatus(status.id);
+    } else {
+      await context.read<TimelineProvider>().favoriteStatus(status.id);
+    }
+  }
+
+  _onShare(BuildContext context) async {}
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         ActionButton(
-          onPressed: () {},
+          onPressed: () => _onReply(context),
           icon: Icons.reply,
           label: status.repliesCount > 0 ? '${status.repliesCount}' : '',
-          // style: ButtonStyle(textStyle: Theme.of(context).textTheme.caption),
         ),
         ActionButton(
-          onPressed: () async {
-            await context.read<TimelineProvider>().reblogStatus(status.id);
-          },
+          onPressed: () => _onReblog(context),
           icon: Icons.repeat,
           isActivated: status.isReblogged,
           label: status.reblogsCount > 0 ? '${status.reblogsCount}' : '',
         ),
         ActionButton(
-          onPressed: () async {
-            if (status.isFavourited == true) {
-              await context
-                  .read<TimelineProvider>()
-                  .unfavoriteStatus(status.id);
-            } else {
-              await context.read<TimelineProvider>().favoriteStatus(status.id);
-            }
-          },
+          onPressed: () => _onFavourute(context),
           icon: status.isFavourited == true ? Icons.star : Icons.star_border,
           isActivated: status.isFavourited,
           label: status.favouritesCount > 0 ? '${status.favouritesCount}' : '',
         ),
         ActionButton(
-          onPressed: () {},
+          onPressed: () => _onShare(context),
           icon: Icons.share,
         ),
         const Spacer(),
