@@ -5,18 +5,13 @@ import 'package:mastodon_api/mastodon_api.dart';
 
 @Entity(
   tableName: 'statuses',
-  // foreignKeys: [
-  //   ForeignKey(
-  //     childColumns: ['inReplyToId'],
-  //     parentColumns: ['id'],
-  //     entity: StatusEntity,
-  //   ),
-  //   ForeignKey(
-  //     childColumns: ['inReplyToAccountId'],
-  //     parentColumns: ['id'],
-  //     entity: AccountEntity,
-  //   ),
-  // ],
+  foreignKeys: [
+    ForeignKey(
+      childColumns: ['accountId'],
+      parentColumns: ['id'],
+      entity: AccountEntity,
+    ),
+  ],
 )
 class StatusEntity {
   @primaryKey

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:mastodon/base/constants.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
@@ -11,24 +10,24 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 class StatusCard extends StatelessWidget {
   final StatusEntity status;
-  // final StatusEntity? reblog;
   final bool showMedia;
   final EdgeInsets padding;
   const StatusCard(
     this.status, {
     this.showMedia = true,
-    // this.reblog,
     this.padding = const EdgeInsets.all(8.0),
     super.key,
   });
 
+  StatusEntity get actualStatus => status.reblog ?? status;
+
   @override
   Widget build(BuildContext context) {
-    final actualStatus = status.reblog ?? status;
     return Padding(
       padding: padding,
       child: Column(children: [
         if (status.reblog != null) StatusCardReblogged(status.account!),
+        StatusCardHeader(status),
         StatusCardContent(actualStatus),
         if (actualStatus.mediaAttachments?.isNotEmpty ?? false)
           StatusMedia(actualStatus.mediaAttachments ?? []),
@@ -41,10 +40,87 @@ class StatusCard extends StatelessWidget {
   }
 }
 
+class StatusCardHeader extends StatelessWidget {
+  final StatusEntity status;
+  const StatusCardHeader(this.status, {super.key});
+  StatusEntity get actualStatus => status.reblog ?? status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        StatusCardAccount(status),
+        TimeAgo(actualStatus.createdAt),
+      ],
+    );
+  }
+}
+
+class StatusCardAccount extends StatelessWidget {
+  final StatusEntity status;
+  const StatusCardAccount(this.status, {super.key});
+
+  StatusEntity get actualStatus => status.reblog ?? status;
+  AccountEntity get account => actualStatus.account!;
+
+  String get displayName {
+    var name = 'User';
+
+    if (account.displayName.isNotEmpty) {
+      name = account.displayName;
+    } else {
+      name = account.username;
+    }
+
+    return name;
+  }
+
+  _openProfile(BuildContext context) async {
+    await Navigator.of(context)
+        .pushNamed(Routes.profile, arguments: {'accountId': account.id});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        onTap: () => _openProfile(context),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (status.reblog == null)
+              AccountAvatar(
+                avatar: account.avatar,
+              ),
+            if (status.reblog != null)
+              AccountAvatarReblogged(
+                avatar: account.avatar,
+                rebloggedAvatar: status.account!.avatar,
+              ),
+            const SizedBox(
+              width: 10,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.bodyText1,
+                ),
+                Text(
+                  '@${account.acct ?? ''}',
+                  style: Theme.of(context).textTheme.caption,
+                ),
+              ],
+            )
+          ],
+        ));
+  }
+}
+
 class StatusCardContent extends StatelessWidget {
   final StatusEntity status;
-  final bool showAccount;
-  const StatusCardContent(this.status, {this.showAccount = true, super.key});
+  const StatusCardContent(this.status, {super.key});
 
   _openThread(BuildContext context) async {
     await Navigator.of(context)
@@ -60,30 +136,28 @@ class StatusCardContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (showAccount)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              StatusCardAuthor(status.account!),
-              TimeAgo(status.createdAt),
-            ],
-          ),
         GestureDetector(
           onTap: () => {_openThread(context)},
-          child: Html(
-            style: {
-              'body': Style(
-                padding: const EdgeInsets.all(0),
-                margin: const EdgeInsets.all(0),
-              )
-            },
-            data: status.content,
-            onLinkTap: (url, context, attributes, element) {
-              debugPrint(url);
-              if (url != null) {
-                _openLink(url);
-              }
-            },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Html(
+              style: {
+                'body': Style(
+                    padding: const EdgeInsets.all(0),
+                    margin: const EdgeInsets.all(0),
+                    lineHeight: LineHeight.em(1.4)),
+                'p': Style(
+                  margin: const EdgeInsets.all(0),
+                )
+              },
+              data: status.content,
+              onLinkTap: (url, context, attributes, element) {
+                debugPrint(url);
+                if (url != null) {
+                  _openLink(url);
+                }
+              },
+            ),
           ),
         ),
       ],
@@ -113,10 +187,11 @@ class StatusCardActions extends StatelessWidget {
   }
 
   _onFavourute(BuildContext context) async {
+    final timelineProvider = context.read<TimelineProvider>();
     if (status.isFavourited == true) {
-      await context.read<TimelineProvider>().unfavoriteStatus(status.id);
+      await timelineProvider.unfavoriteStatus(status.id);
     } else {
-      await context.read<TimelineProvider>().favoriteStatus(status.id);
+      await timelineProvider.favoriteStatus(status.id);
     }
   }
 
@@ -128,78 +203,33 @@ class StatusCardActions extends StatelessWidget {
       children: [
         ActionButton(
           onPressed: () => _onReply(context),
-          icon: Icons.reply,
+          icon: const ActionIcon(icon: Icons.reply),
           label: status.repliesCount > 0 ? '${status.repliesCount}' : '',
         ),
         ActionButton(
           onPressed: () => _onReblog(context),
-          icon: Icons.repeat,
-          isActivated: status.isReblogged,
+          icon: ActionIcon(
+            icon: Icons.repeat,
+            isActivated: status.isReblogged,
+          ),
           label: status.reblogsCount > 0 ? '${status.reblogsCount}' : '',
         ),
         ActionButton(
           onPressed: () => _onFavourute(context),
-          icon: status.isFavourited == true ? Icons.star : Icons.star_border,
-          isActivated: status.isFavourited,
+          icon: ActionIcon(
+            icon: status.isFavourited == true ? Icons.star : Icons.star_border,
+            isActivated: status.isFavourited,
+          ),
           label: status.favouritesCount > 0 ? '${status.favouritesCount}' : '',
         ),
         ActionButton(
           onPressed: () => _onShare(context),
-          icon: Icons.share,
+          icon: const ActionIcon(icon: Icons.share),
         ),
         const Spacer(),
-        ActionButton(
-          onPressed: () {},
-          icon: Icons.more_vert,
-        )
+        StatusCardMenu(status)
       ],
     );
-  }
-}
-
-class StatusCardAuthor extends StatelessWidget {
-  final AccountEntity account;
-  const StatusCardAuthor(this.account, {super.key});
-
-  _openProfile(BuildContext context) async {
-    await Navigator.of(context)
-        .pushNamed(Routes.profile, arguments: {'accountId': account.id});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var displayName = 'User';
-
-    if (account.displayName.isNotEmpty ?? false) {
-      displayName = account.displayName;
-    }
-    if (account.displayName.isEmpty ?? false) {
-      displayName = account.username;
-    }
-
-    return GestureDetector(
-        onTap: () => _openProfile(context),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          AccountAvatar(
-            avatar: account.avatar,
-          ),
-          const SizedBox(
-            width: 10,
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                displayName,
-                style: Theme.of(context).textTheme.bodyText1,
-              ),
-              Text(
-                '@${account.acct ?? ''}',
-                style: Theme.of(context).textTheme.caption,
-              ),
-            ],
-          )
-        ]));
   }
 }
 
@@ -209,15 +239,6 @@ class StatusCardReblogged extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var displayName = 'User';
-
-    if (account.displayName.isNotEmpty ?? false) {
-      displayName = account.displayName;
-    }
-    if (account.displayName.isEmpty ?? false) {
-      displayName = account.username;
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
       child: DefaultTextStyle(
@@ -235,7 +256,7 @@ class StatusCardReblogged extends StatelessWidget {
               const SizedBox(
                 width: 4,
               ),
-              Text(displayName),
+              Text(account.displayName),
               const SizedBox(
                 width: 4,
               ),
@@ -257,6 +278,63 @@ class StatusCardPlaceholder extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(color: Theme.of(context).disabledColor),
       ),
+    );
+  }
+}
+
+class StatusCardMenuItem {
+  final String label;
+  final IconData iconData;
+  final void Function() onSelect;
+
+  const StatusCardMenuItem({
+    required this.label,
+    required this.iconData,
+    required this.onSelect,
+  });
+}
+
+class StatusCardMenu extends StatelessWidget {
+  final List<StatusCardMenuItem> menu;
+  final StatusEntity status;
+  StatusCardMenu(this.status, {super.key})
+      : menu = [
+          StatusCardMenuItem(
+              label: 'Open link to post',
+              iconData: Icons.open_in_new,
+              onSelect: () async {
+                  await launchUrlString('${status.account!.url}/${status.id}');
+              })
+        ];
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton(
+      child: const ActionIcon(
+        icon: Icons.more_vert,
+      ),
+      onSelected: (index) {
+        final item = menu.elementAt(index);
+        item.onSelect();
+      },
+      itemBuilder: (BuildContext context) => [
+        for (var item in menu)
+          PopupMenuItem(
+            value: menu.indexOf(item),
+            child: Row(
+              children: [
+                Icon(
+                  item.iconData,
+                  // color: Colors.black,
+                ),
+                SizedBox(
+                  width: 4,
+                ),
+                Text(item.label),
+              ],
+            ),
+          )
+      ],
     );
   }
 }

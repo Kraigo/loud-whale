@@ -99,7 +99,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `username` TEXT NOT NULL, `displayName` TEXT NOT NULL, `acct` TEXT NOT NULL, `note` TEXT NOT NULL, `url` TEXT NOT NULL, `avatar` TEXT NOT NULL, `avatarStatic` TEXT NOT NULL, `header` TEXT NOT NULL, `headerStatic` TEXT NOT NULL, `followersCount` INTEGER NOT NULL, `followingCount` INTEGER NOT NULL, `subscribingCount` INTEGER, `statusesCount` INTEGER NOT NULL, `isBot` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
         await database.execute(
@@ -450,6 +450,29 @@ class _$AccountDao extends AccountDao {
                   'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
                   'createdAt': _dateTimeConverter.encode(item.createdAt)
                 },
+            changeListener),
+        _accountEntityDeletionAdapter = DeletionAdapter(
+            database,
+            'accounts',
+            ['id'],
+            (AccountEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'username': item.username,
+                  'displayName': item.displayName,
+                  'acct': item.acct,
+                  'note': item.note,
+                  'url': item.url,
+                  'avatar': item.avatar,
+                  'avatarStatic': item.avatarStatic,
+                  'header': item.header,
+                  'headerStatic': item.headerStatic,
+                  'followersCount': item.followersCount,
+                  'followingCount': item.followingCount,
+                  'subscribingCount': item.subscribingCount,
+                  'statusesCount': item.statusesCount,
+                  'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
+                },
             changeListener);
 
   final sqflite.DatabaseExecutor database;
@@ -459,6 +482,8 @@ class _$AccountDao extends AccountDao {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
+
+  final DeletionAdapter<AccountEntity> _accountEntityDeletionAdapter;
 
   @override
   Future<List<AccountEntity>> findAllAccountes() async {
@@ -584,6 +609,20 @@ class _$AccountDao extends AccountDao {
   }
 
   @override
+  Future<void> deleteAccountAttachments(String accountId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM attachments     WHERE attachments.statusId IN (       SELECT id FROM statuses WHERE accountId = ?1     )',
+        arguments: [accountId]);
+  }
+
+  @override
+  Future<void> deleteAccountStatuses(String accountId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM statuses WHERE accountId = ?1',
+        arguments: [accountId]);
+  }
+
+  @override
   Future<void> insertAccount(AccountEntity account) async {
     await _accountEntityInsertionAdapter.insert(
         account, OnConflictStrategy.replace);
@@ -593,6 +632,26 @@ class _$AccountDao extends AccountDao {
   Future<void> insertAccounts(List<AccountEntity> accounts) async {
     await _accountEntityInsertionAdapter.insertList(
         accounts, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> deleteAccount(AccountEntity account) async {
+    await _accountEntityDeletionAdapter.delete(account);
+  }
+
+  @override
+  Future<void> deleteAccountWithRelations(String accountId) async {
+    if (database is sqflite.Transaction) {
+      await super.deleteAccountWithRelations(accountId);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.accountDao
+            .deleteAccountWithRelations(accountId);
+      });
+    }
   }
 }
 
@@ -754,7 +813,30 @@ class _$TimelineDao extends TimelineDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'accountId': item.accountId,
                   'statusId': item.statusId
-                });
+                }),
+        _accountEntityDeletionAdapter = DeletionAdapter(
+            database,
+            'accounts',
+            ['id'],
+            (AccountEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'username': item.username,
+                  'displayName': item.displayName,
+                  'acct': item.acct,
+                  'note': item.note,
+                  'url': item.url,
+                  'avatar': item.avatar,
+                  'avatarStatic': item.avatarStatic,
+                  'header': item.header,
+                  'headerStatic': item.headerStatic,
+                  'followersCount': item.followersCount,
+                  'followingCount': item.followingCount,
+                  'subscribingCount': item.subscribingCount,
+                  'statusesCount': item.statusesCount,
+                  'isBot': item.isBot == null ? null : (item.isBot! ? 1 : 0),
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
+                },
+            changeListener);
 
   final sqflite.DatabaseExecutor database;
 
@@ -770,6 +852,8 @@ class _$TimelineDao extends TimelineDao {
 
   final InsertionAdapter<NotificationEntity>
       _notificationEntityInsertionAdapter;
+
+  final DeletionAdapter<AccountEntity> _accountEntityDeletionAdapter;
 
   @override
   Future<List<StatusEntity>> findAllStatuses() async {
@@ -1030,6 +1114,20 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAccountAttachments(String accountId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM attachments     WHERE attachments.statusId IN (       SELECT id FROM statuses WHERE accountId = ?1     )',
+        arguments: [accountId]);
+  }
+
+  @override
+  Future<void> deleteAccountStatuses(String accountId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM statuses WHERE accountId = ?1',
+        arguments: [accountId]);
+  }
+
+  @override
   Future<AttachmentEntity?> findAttachmentById(String id) async {
     return _queryAdapter.query('SELECT * FROM attachments WHERE id = ?1',
         mapper: (Map<String, Object?> row) => AttachmentEntity(
@@ -1131,6 +1229,11 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAccount(AccountEntity account) async {
+    await _accountEntityDeletionAdapter.delete(account);
+  }
+
+  @override
   Future<void> saveTimelineStatuses(List<Status> statuses) async {
     if (database is sqflite.Transaction) {
       await super.saveTimelineStatuses(statuses);
@@ -1140,6 +1243,21 @@ class _$TimelineDao extends TimelineDao {
         final transactionDatabase = _$AppDatabase(changeListener)
           ..database = transaction;
         await transactionDatabase.timelineDao.saveTimelineStatuses(statuses);
+      });
+    }
+  }
+
+  @override
+  Future<void> deleteAccountWithRelations(String accountId) async {
+    if (database is sqflite.Transaction) {
+      await super.deleteAccountWithRelations(accountId);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.timelineDao
+            .deleteAccountWithRelations(accountId);
       });
     }
   }

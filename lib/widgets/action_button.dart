@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 
 class ActionButton extends StatelessWidget {
-  final IconData icon;
+  final ActionIcon icon;
   final String? label;
-  final bool isActivated;
-  final Function() onPressed;
+  final Function()? onPressed;
   const ActionButton({
     required this.icon,
-    required this.onPressed,
+    this.onPressed,
     this.label,
-    bool? isActivated,
     super.key,
-  }) : isActivated = isActivated ?? false;
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor = isActivated ? theme.primaryColor : theme.hintColor;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -25,11 +22,7 @@ class ActionButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: iconColor,
-                ),
+                icon,
                 if (label != null)
                   Text(
                     label!,
@@ -38,6 +31,27 @@ class ActionButton extends StatelessWidget {
               ],
             )),
       ),
+    );
+  }
+}
+
+class ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isActivated;
+  const ActionIcon({
+    required this.icon,
+    bool? isActivated,
+    super.key,
+  }) : isActivated = isActivated ?? false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final iconColor = isActivated ? theme.primaryColor : theme.hintColor;
+    return Icon(
+      icon,
+      size: 18,
+      color: iconColor,
     );
   }
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:mastodon/base/database.dart';
 import 'package:mastodon/enties/account_entity.dart';
 import 'package:mastodon/enties/entries.dart';
-import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/profile_provider.dart';
+import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -54,23 +52,42 @@ class ProfileHeader extends StatelessWidget {
   final AccountEntity account;
   const ProfileHeader(this.account, {super.key});
 
+  _onFollow(BuildContext context) async {
+    final profileProvider = context.read<ProfileProvider>();
+    final timelineProvider = context.read<TimelineProvider>();
+    await profileProvider.follow(account.id);
+    await timelineProvider.refresh();
+    await profileProvider.loadRelationship(account.id);
+  }
+
+  _onUnfollow(BuildContext context) async {
+    final profileProvider = context.read<ProfileProvider>();
+    final timelineProvider = context.read<TimelineProvider>();
+    await profileProvider.unfollow(account.id);
+    await timelineProvider.refresh();
+    await profileProvider.loadRelationship(account.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AccountCard(
       account,
-      actions: _buildFollowingButton(),
+      actions: Row(children: [_buildFollowingButton(context)]),
     );
   }
 
-  Widget _buildFollowingButton() {
+  Widget _buildFollowingButton(BuildContext context) {
     if (account.relationship?.isFollowing == true) {
       return TextButton.icon(
-        onPressed: () {},
+        onPressed: () => _onUnfollow(context),
         label: Text('Following'),
         icon: Icon(Icons.check),
       );
     }
-    return ElevatedButton(onPressed: () {}, child: Text('Follow'));
+    return ElevatedButton(
+      onPressed: () => _onFollow(context),
+      child: Text('Follow'),
+    );
   }
 }
 

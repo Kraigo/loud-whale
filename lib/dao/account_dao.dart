@@ -28,4 +28,28 @@ abstract class AccountDao {
 
   @Query('DELETE FROM accounts')
   Future<void> deleteAllAccounts();
+
+  @delete
+  Future<void> deleteAccount(AccountEntity account);
+
+  @Query('''
+  DELETE FROM attachments
+    WHERE attachments.statusId IN (
+      SELECT id FROM statuses WHERE accountId = :accountId
+    )
+    ''')
+  Future<void> deleteAccountAttachments(String accountId);
+
+  @Query('DELETE FROM statuses WHERE accountId = :accountId')
+  Future<void> deleteAccountStatuses(String accountId);
+
+  @transaction
+  Future<void> deleteAccountWithRelations(String accountId) async {
+    await deleteAccountAttachments(accountId);
+    await deleteAccountStatuses(accountId);
+    final account = await findAccountById(accountId);
+    if (account != null) {
+      await deleteAccount(account);
+    }
+  }
 }

@@ -46,14 +46,6 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  follow(String accountId) async {
-    try {
-      await MastodonHelper.api?.v1.accounts.createFollow(accountId: accountId);
-    } finally {
-      notifyListeners();
-    }
-  }
-
   Future<void> loadRelationship(String accountId) async {
     try {
       final resp = await MastodonHelper.api?.v1.accounts
@@ -69,9 +61,19 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  unfollow(String accountId) async {
+  Future<void> follow(String accountId) async {
+    try {
+      await MastodonHelper.api?.v1.accounts.createFollow(accountId: accountId);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> unfollow(String accountId) async {
     try {
       await MastodonHelper.api?.v1.accounts.destroyFollow(accountId: accountId);
+      await accountDao.deleteAccountAttachments(accountId);
+      await accountDao.deleteAccountStatuses(accountId);
     } finally {
       notifyListeners();
     }

@@ -65,7 +65,9 @@ class _ThreadScreenState extends State<ThreadScreen> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final status = threadProvider.descendants[index];
-                  return MiddleContainer(StatusCard(status));
+                  return DividerContainer(
+                    child: MiddleContainer(StatusCard(status)),
+                  );
                 },
                 childCount: threadProvider.descendants.length,
               ),
