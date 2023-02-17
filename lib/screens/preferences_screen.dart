@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/helpers/format_bytes.dart';
-import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:provider/provider.dart';
 
 class PreferencesScreen extends StatefulWidget {
@@ -56,23 +55,23 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Settings"),
+        title: const Text("Settings"),
       ),
       body: Container(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: ListView(
           children: [
             ListTile(
               tileColor: Theme.of(context).cardColor,
-              title: Text("Clean cache"),
+              title: const Text("Clean cache"),
               subtitle: Text('Database size ${formatBytes(size, 2)}'),
-              leading: loading ? LoadingIcon() : Icon(Icons.cleaning_services),
+              leading: loading ? const LoadingIcon() : const Icon(Icons.cleaning_services),
               onTap: _onCleanCache,
             ),
             ListTile(
               tileColor: Theme.of(context).cardColor,
-              title: Text("Logout"),
-              leading: Icon(Icons.logout),
+              title: const Text("Logout"),
+              leading: const Icon(Icons.logout),
               onTap: _onLogout,
             )
           ],

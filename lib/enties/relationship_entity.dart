@@ -1,4 +1,5 @@
 import 'package:floor/floor.dart';
+// ignore: implementation_imports
 import 'package:mastodon_api/src/service/entities/relationship.dart';
 
 @Entity(

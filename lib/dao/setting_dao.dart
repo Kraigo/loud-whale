@@ -1,6 +1,5 @@
 import 'package:floor/floor.dart';
 import 'package:mastodon/enties/entries.dart';
-import 'package:mastodon/enties/setting_entity.dart';
 
 @dao
 abstract class SettingDao {

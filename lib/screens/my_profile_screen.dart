@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/base/database.dart';
-import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';

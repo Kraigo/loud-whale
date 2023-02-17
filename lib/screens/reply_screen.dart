@@ -20,7 +20,7 @@ class ReplyScreen extends StatelessWidget {
       backgroundColor: Colors.black.withOpacity(0.3),
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.close),
+          icon: const Icon(Icons.close),
           onPressed: () {
             Navigator.pop(context);
           },

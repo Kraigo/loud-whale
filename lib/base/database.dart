@@ -1,7 +1,7 @@
 // required package imports
 import 'dart:async';
-// ignore: depend_on_referenced_packages
 import 'package:mastodon/dao/relationship_dao.dart';
+// ignore: depend_on_referenced_packages
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:floor/floor.dart';
 import 'package:mastodon/dao/account_dao.dart';

@@ -3,7 +3,6 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/enties/account_entity.dart';
 import 'package:mastodon/widgets/widgets.dart';
 
-import 'account_avatar.dart';
 
 class AccountCard extends StatelessWidget {
   final AccountEntity account;
@@ -44,12 +43,12 @@ class AccountCard extends StatelessWidget {
                       Text('@${account.username}')
                     ],
                   ),
-                  Spacer(),
+                  const Spacer(),
                   actions ?? Container()
                 ],
               ),
               Html(data: account.note),
-              Divider(),
+              const Divider(),
               StatusesCount(account),
             ],
           ),

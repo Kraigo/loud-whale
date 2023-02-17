@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_player_macos/video_player_macos.dart';
 
 class MediaGif extends StatefulWidget {
   final String url;

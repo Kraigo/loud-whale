@@ -127,7 +127,7 @@ class _ComposeInputState extends State<ComposeInput> {
 
 class _ComposeCountLimit extends StatelessWidget {
   final TextEditingController controller;
-  const _ComposeCountLimit(this.controller, {super.key});
+  const _ComposeCountLimit(this.controller);
 
   @override
   Widget build(BuildContext context) {

@@ -108,7 +108,7 @@ class StatusCardAccount extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 Text(
-                  '@${account.acct ?? ''}',
+                  '@${account.acct}',
                   style: Theme.of(context).textTheme.caption,
                 ),
               ],
@@ -327,7 +327,7 @@ class StatusCardMenu extends StatelessWidget {
                   item.iconData,
                   // color: Colors.black,
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 4,
                 ),
                 Text(item.label),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/database.dart';
-import 'package:mastodon/enties/status_entity.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -74,17 +72,5 @@ class _ThreadScreenState extends State<ThreadScreen> {
             ),
           ],
         ));
-  }
-}
-
-class _ThreadCard extends StatelessWidget {
-  final StatusEntity? status;
-  const _ThreadCard(this.status);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: const Text("status"),
-    );
   }
 }

@@ -37,7 +37,7 @@ class AccountAvatarReblogged extends StatelessWidget {
           bottom: 0.0,
           child: AccountAvatarPlaceholder(
             size: 20,
-            child: Image.network(rebloggedAvatar!),
+            child: Image.network(rebloggedAvatar),
           ),
         )
       ]),

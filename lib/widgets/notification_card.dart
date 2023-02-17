@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_html/style.dart';
 import 'package:intl/intl.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/base/theme.dart';
 import 'package:mastodon/enties/entries.dart';
-import 'package:mastodon/providers/notifications_provider.dart';
-import 'package:provider/provider.dart';
 
 import 'account_avatar.dart';
 import 'middle_container.dart';
@@ -82,7 +79,7 @@ class NotificationCard extends StatelessWidget {
                       children: [
                         if (notification.account != null)
                           _NotificationAccount(notification),
-                        Spacer(),
+                        const Spacer(),
                         _NotificationDate(notification),
                       ],
                     ),
@@ -102,7 +99,7 @@ class NotificationCard extends StatelessWidget {
 
 class _NotificationAccount extends StatelessWidget {
   final NotificationEntity notification;
-  const _NotificationAccount(this.notification, {super.key});
+  const _NotificationAccount(this.notification);
 
   AccountEntity get account => notification.account!;
 
@@ -165,7 +162,7 @@ class _NotificationAccount extends StatelessWidget {
 
 class _NotificationStatus extends StatelessWidget {
   final NotificationEntity notification;
-  const _NotificationStatus(this.notification, {super.key});
+  const _NotificationStatus(this.notification);
 
   StatusEntity get status => notification.status!;
 
@@ -198,7 +195,7 @@ class _NotificationStatus extends StatelessWidget {
 class _NotificationDate extends StatelessWidget {
   final NotificationEntity notification;
   final DateFormat formatter = DateFormat.yMMMd();
-  _NotificationDate(this.notification, {super.key});
+  _NotificationDate(this.notification);
 
   @override
   Widget build(BuildContext context) {

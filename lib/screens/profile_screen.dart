@@ -80,13 +80,13 @@ class ProfileHeader extends StatelessWidget {
     if (account.relationship?.isFollowing == true) {
       return TextButton.icon(
         onPressed: () => _onUnfollow(context),
-        label: Text('Following'),
-        icon: Icon(Icons.check),
+        label: const Text('Following'),
+        icon: const Icon(Icons.check),
       );
     }
     return ElevatedButton(
       onPressed: () => _onFollow(context),
-      child: Text('Follow'),
+      child: const Text('Follow'),
     );
   }
 }

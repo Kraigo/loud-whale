@@ -131,8 +131,8 @@ class _MediaGalleryState extends State<MediaGallery> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  label: Text("Close"),
-                  icon: Icon(Icons.close),
+                  label: const Text("Close"),
+                  icon: const Icon(Icons.close),
                 ),
               ),
               if (!_isSingle)
@@ -144,11 +144,11 @@ class _MediaGalleryState extends State<MediaGallery> {
                           ? null
                           : () {
                               pageController.previousPage(
-                                  duration: Duration(milliseconds: 200),
+                                  duration: const Duration(milliseconds: 200),
                                   curve: Curves.easeIn);
                             },
-                      icon: Icon(Icons.chevron_left),
-                      label: Text("Prev"),
+                      icon: const Icon(Icons.chevron_left),
+                      label: const Text("Prev"),
                     )),
               if (!_isSingle)
                 Positioned(
@@ -159,11 +159,11 @@ class _MediaGalleryState extends State<MediaGallery> {
                           ? null
                           : () {
                               pageController.nextPage(
-                                  duration: Duration(milliseconds: 200),
+                                  duration: const Duration(milliseconds: 200),
                                   curve: Curves.easeIn);
                             },
-                      icon: Icon(Icons.chevron_right),
-                      label: Text("Next"),
+                      icon: const Icon(Icons.chevron_right),
+                      label: const Text("Next"),
                     )),
             ],
           )),

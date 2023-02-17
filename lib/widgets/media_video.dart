@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_player_macos/video_player_macos.dart';
 
 class MediaVideo extends StatefulWidget {
-  String url;
-  MediaVideo(this.url, {super.key});
+  final String url;
+  const MediaVideo(this.url, {super.key});
 
   @override
   State<MediaVideo> createState() => _MediaVideoState();
@@ -49,7 +48,7 @@ class _MediaVideoState extends State<MediaVideo> {
                   ),
                 ),
                 Container(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -57,8 +56,11 @@ class _MediaVideoState extends State<MediaVideo> {
                           _videoController,
                         ),
                         Expanded(
-                          child: VideoProgressIndicator(_videoController,
-                              allowScrubbing: true, padding: EdgeInsets.zero,),
+                          child: VideoProgressIndicator(
+                            _videoController,
+                            allowScrubbing: true,
+                            padding: EdgeInsets.zero,
+                          ),
                         ),
                         VolumeButton(_videoController)
                       ],
