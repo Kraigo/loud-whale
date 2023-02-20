@@ -39,7 +39,9 @@ class StatusMedia extends StatelessWidget {
         return Row(
           children: [
             Flexible(child: _buildImage(context, attachments[0])),
-            const SizedBox(width: 5,),
+            const SizedBox(
+              width: 5,
+            ),
             Flexible(child: _buildImage(context, attachments[1]))
           ],
         );
@@ -65,7 +67,7 @@ class StatusMedia extends StatelessWidget {
               child: Column(
                 children: [
                   _buildImage(context, attachments[0]),
-            const SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   _buildImage(context, attachments[2])
                 ],
               ),
@@ -75,7 +77,7 @@ class StatusMedia extends StatelessWidget {
               child: Column(
                 children: [
                   _buildImage(context, attachments[1]),
-            const SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   _buildImage(context, attachments[3])
                 ],
               ),
@@ -98,6 +100,16 @@ class StatusMedia extends StatelessWidget {
               attachment.previewUrl,
               alignment: const Alignment(0.5, 0.5),
               fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.play_circle,
+                size: 60,
+                color: Theme.of(context).primaryColor.withOpacity(0.6),
+              ),
             ),
           ),
           Positioned(
@@ -144,10 +156,13 @@ class AttachmentLabel extends StatelessWidget {
         color: Colors.black.withOpacity(0.3),
         borderRadius: BorderRadius.circular(3),
       ),
-      child: Text(
-        labels[attachment.type].toUpperCase(),
-        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
-      ),
+      child: Tooltip(
+          message: attachment.description ?? '',
+          child: Text(
+            labels[attachment.type].toUpperCase(),
+            style:
+                TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
+          )),
     );
   }
 }
