@@ -37,7 +37,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   provider: ^6.0.5
-  mastodon_api: ^0.5.2
+  mastodon_api: ^0.6.1
   flutter_datetime_picker: ^1.2.8  
   url_launcher: ^6.1.8
   flutter_dotenv: ^5.0.2

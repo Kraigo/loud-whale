@@ -37,7 +37,7 @@ class AttachmentEntity {
         statusId: statusId,
         id: media.id,
         type: media.type.index,
-        url: media.url,
+        url: media.url ?? media.previewUrl,
         previewUrl: media.previewUrl,
         remoteUrl: media.remoteUrl,
         description: media.description,
