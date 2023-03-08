@@ -102,6 +102,7 @@ class StatusMedia extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
+          if (attachment.isVideo)
           Positioned.fill(
             child: Align(
               alignment: Alignment.center,

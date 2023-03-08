@@ -31,7 +31,7 @@ class TimelineProvider extends ChangeNotifier {
     for (var s in _statuses) {
       await timelineDao.populateStatus(s);
     }
-    sortStatusesByReply(_statuses);
+    sortStatusesByReply(_statuses, offset: const Duration(minutes: 10));
     notifyListeners();
   }
 
@@ -50,7 +50,7 @@ class TimelineProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   unfavoriteStatus(String statusId) async {
     try {
       final resp = await MastodonHelper.api?.v1.statuses

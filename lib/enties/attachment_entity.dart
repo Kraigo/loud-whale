@@ -42,4 +42,12 @@ class AttachmentEntity {
         remoteUrl: media.remoteUrl,
         description: media.description,
       );
+
+  get isVideo {
+    return type == MediaAttachmentType.video.index;
+  }
+
+  get isImage {
+    return type == MediaAttachmentType.image.index;
+  }
 }
