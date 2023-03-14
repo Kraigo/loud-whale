@@ -26,12 +26,25 @@ class HomeScreen extends StatelessWidget {
 class _Sidebar extends StatelessWidget {
   const _Sidebar();
 
+  _onCompose(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ComposeScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
 
     return NavigationRail(
       extended: false,
+      leading: FloatingActionButton(
+        onPressed: () {_onCompose(context);},
+        elevation: 0,
+        child: const Icon(Icons.edit),
+      ),
+      groupAlignment: 0,
       destinations: [
         ...homeProvider.menuList.map(
           (e) => NavigationRailDestination(

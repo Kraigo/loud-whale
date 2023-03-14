@@ -14,8 +14,10 @@ class ComposeScreen extends StatefulWidget {
 class _ComposeScreenState extends State<ComposeScreen> {
   _onCompose(String text) async {
     final homeProvider = context.read<HomeProvider>();
+    final navigator = Navigator.of(context);
     await context.read<ComposeProvider>().publishStatus(text);
     homeProvider.selectMenu(HomeMenu.home);
+    navigator.pop(true);
   }
 
   @override
