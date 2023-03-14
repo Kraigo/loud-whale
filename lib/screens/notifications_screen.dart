@@ -39,11 +39,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           itemCount: notifications.length,
           itemBuilder: (context, index) {
             final item = notifications[index];
-            return NotificationCard(item);
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: NotificationCard(item),
+            );
           },
-          separatorBuilder: ((context, index) {
-            return const Divider();
-          }),
+          separatorBuilder: (context, index) =>
+              const MiddleContainer(Divider()),
         ));
   }
 }

@@ -37,5 +37,6 @@ StatusEntity createStatus(String id, String? replyId) {
     createdAt: DateTime.now(),
     accountId: '',
     inReplyToId: replyId,
+    hasContent: true,
   );
 }

@@ -99,7 +99,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `username` TEXT NOT NULL, `displayName` TEXT NOT NULL, `acct` TEXT NOT NULL, `note` TEXT NOT NULL, `url` TEXT NOT NULL, `avatar` TEXT NOT NULL, `avatarStatic` TEXT NOT NULL, `header` TEXT NOT NULL, `headerStatic` TEXT NOT NULL, `followersCount` INTEGER NOT NULL, `followingCount` INTEGER NOT NULL, `subscribingCount` INTEGER, `statusesCount` INTEGER NOT NULL, `isBot` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `hasContent` INTEGER, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
         await database.execute(
@@ -169,6 +169,9 @@ class _$StatusDao extends StatusDao {
                   'url': item.url,
                   'uri': item.uri,
                   'content': item.content,
+                  'hasContent': item.hasContent == null
+                      ? null
+                      : (item.hasContent! ? 1 : 0),
                   'spoilerText': item.spoilerText,
                   'visibility': item.visibility,
                   'favouritesCount': item.favouritesCount,
@@ -215,6 +218,9 @@ class _$StatusDao extends StatusDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -252,6 +258,9 @@ class _$StatusDao extends StatusDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -286,7 +295,7 @@ class _$StatusDao extends StatusDao {
   Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
     return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
 
@@ -294,7 +303,7 @@ class _$StatusDao extends StatusDao {
   Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
     return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
 
@@ -306,6 +315,9 @@ class _$StatusDao extends StatusDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -339,6 +351,47 @@ class _$StatusDao extends StatusDao {
   @override
   Future<void> deleteAllStatuses() async {
     await _queryAdapter.queryNoReturn('DELETE FROM statuses');
+  }
+
+  @override
+  Future<StatusEntity?> getOldestStatus() async {
+    return _queryAdapter.query(
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt ASC   LIMIT 1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String));
   }
 
   @override
@@ -742,6 +795,9 @@ class _$TimelineDao extends TimelineDao {
                   'url': item.url,
                   'uri': item.uri,
                   'content': item.content,
+                  'hasContent': item.hasContent == null
+                      ? null
+                      : (item.hasContent! ? 1 : 0),
                   'spoilerText': item.spoilerText,
                   'visibility': item.visibility,
                   'favouritesCount': item.favouritesCount,
@@ -864,6 +920,9 @@ class _$TimelineDao extends TimelineDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -901,6 +960,9 @@ class _$TimelineDao extends TimelineDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -935,7 +997,7 @@ class _$TimelineDao extends TimelineDao {
   Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
     return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
 
@@ -943,7 +1005,7 @@ class _$TimelineDao extends TimelineDao {
   Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
     return _queryAdapter.queryList(
         'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
-        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
 
@@ -955,6 +1017,9 @@ class _$TimelineDao extends TimelineDao {
             url: row['url'] as String?,
             uri: row['uri'] as String,
             content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
             spoilerText: row['spoilerText'] as String,
             visibility: row['visibility'] as String,
             favouritesCount: row['favouritesCount'] as int,
@@ -988,6 +1053,47 @@ class _$TimelineDao extends TimelineDao {
   @override
   Future<void> deleteAllStatuses() async {
     await _queryAdapter.queryNoReturn('DELETE FROM statuses');
+  }
+
+  @override
+  Future<StatusEntity?> getOldestStatus() async {
+    return _queryAdapter.query(
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt ASC   LIMIT 1',
+        mapper: (Map<String, Object?> row) => StatusEntity(
+            id: row['id'] as String,
+            url: row['url'] as String?,
+            uri: row['uri'] as String,
+            content: row['content'] as String,
+            hasContent: row['hasContent'] == null
+                ? null
+                : (row['hasContent'] as int) != 0,
+            spoilerText: row['spoilerText'] as String,
+            visibility: row['visibility'] as String,
+            favouritesCount: row['favouritesCount'] as int,
+            repliesCount: row['repliesCount'] as int,
+            reblogsCount: row['reblogsCount'] as int,
+            language: row['language'] as String?,
+            inReplyToId: row['inReplyToId'] as String?,
+            inReplyToAccountId: row['inReplyToAccountId'] as String?,
+            isFavourited: row['isFavourited'] == null
+                ? null
+                : (row['isFavourited'] as int) != 0,
+            isReblogged: row['isReblogged'] == null
+                ? null
+                : (row['isReblogged'] as int) != 0,
+            isMuted:
+                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
+            isBookmarked: row['isBookmarked'] == null
+                ? null
+                : (row['isBookmarked'] as int) != 0,
+            isSensitive: row['isSensitive'] == null
+                ? null
+                : (row['isSensitive'] as int) != 0,
+            isPinned:
+                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
+            reblogId: row['reblogId'] as String?,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String));
   }
 
   @override

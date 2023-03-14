@@ -84,7 +84,10 @@ class NotificationCard extends StatelessWidget {
                       ],
                     ),
                     if (notification.status != null)
-                      _NotificationStatus(notification),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: _NotificationStatus(notification),
+                      ),
                   ],
                 )
               : StatusCard(
@@ -184,7 +187,7 @@ class _NotificationStatus extends StatelessWidget {
             margin: const EdgeInsets.all(0),
             color: Theme.of(context).disabledColor,
           ),
-          // 'p': Style(margin: EdgeInsets.zero)
+          'p': Style(margin: EdgeInsets.zero),
         },
         data: status.content,
       ),
@@ -199,18 +202,19 @@ class _NotificationDate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Icon(
         Icons.watch_later_outlined,
         size: 12,
-        color: Theme.of(context).hintColor,
+        color: theme.hintColor,
       ),
       const SizedBox(
         width: 2,
       ),
       Text(
         formatter.format(notification.createdAt),
-        style: Theme.of(context).textTheme.caption,
+        style: theme.textTheme.labelSmall!.copyWith(color: theme.hintColor),
       ),
     ]);
   }

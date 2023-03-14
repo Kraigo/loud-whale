@@ -31,12 +31,16 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     });
     final database = context.read<AppDatabase>();
 
-    await database.accountDao.deleteAllAccounts();
-    await database.attachmentDao.deleteAllAttachments();
-    await database.notificationDao.deleteAllNotifications();
-    await database.relationshipDao.deleteAllRelationships();
-    await database.statusDao.deleteAllStatuses();
-    await database.settingDao.vacuum();
+    try {
+      await database.accountDao.deleteAllAccounts();
+      await database.attachmentDao.deleteAllAttachments();
+      await database.notificationDao.deleteAllNotifications();
+      await database.relationshipDao.deleteAllRelationships();
+      await database.statusDao.deleteAllStatuses();
+      await database.settingDao.vacuum();
+    } catch (e) {
+      debugPrint('Failed to clean cache');
+    }
     await _loadInitial();
     setState(() {
       loading = false;
@@ -65,7 +69,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               tileColor: Theme.of(context).cardColor,
               title: const Text("Clean cache"),
               subtitle: Text('Database size ${formatBytes(size, 2)}'),
-              leading: loading ? const LoadingIcon() : const Icon(Icons.cleaning_services),
+              leading: loading
+                  ? const LoadingIcon()
+                  : const Icon(Icons.cleaning_services),
               onTap: _onCleanCache,
             ),
             ListTile(

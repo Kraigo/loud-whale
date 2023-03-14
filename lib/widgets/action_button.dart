@@ -14,22 +14,21 @@ class ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Row(
-              children: [
-                icon,
-                if (label != null)
-                  Text(
-                    label!,
-                    style: theme.textTheme.caption,
-                  ),
-              ],
-            )),
+
+    return TextButton(
+      onPressed: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(children: [
+          icon,
+          if (label?.isNotEmpty ?? false) ...[
+            const SizedBox(width: 8),
+            Text(
+              label!,
+              style: theme.textTheme.labelSmall,
+            )
+          ]
+        ]),
       ),
     );
   }

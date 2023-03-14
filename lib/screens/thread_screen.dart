@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/constants.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -44,27 +45,40 @@ class _ThreadScreenState extends State<ThreadScreen> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final status = threadProvider.ancestors[index];
-                  return MiddleContainer(StatusCard(status));
+                  final isLast = threadProvider.ancestors.length - 1 == index;
+                  return MiddleContainer(
+                    isLast
+                        ? StatusCard(status)
+                        : DividerContainer(child: StatusCard(status)),
+                  );
                 },
                 childCount: threadProvider.ancestors.length,
               ),
             ),
             SliverToBoxAdapter(
                 key: originalStatusKey,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).hintColor.withOpacity(0.03),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(Constants.cardBorderRadius),
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.05),
+                        borderRadius:
+                            BorderRadius.circular(Constants.cardBorderRadius)),
+                    child: MiddleContainer(threadProvider.threadStatus != null
+                        ? StatusCard(threadProvider.threadStatus!)
+                        : const StatusCardPlaceholder()),
                   ),
-                  child: MiddleContainer(threadProvider.threadStatus != null
-                      ? StatusCard(threadProvider.threadStatus!)
-                      : const StatusCardPlaceholder()),
                 )),
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final status = threadProvider.descendants[index];
-                  return DividerContainer(
-                    child: MiddleContainer(StatusCard(status)),
+                  final isLast = threadProvider.descendants.length - 1 == index;
+                  return MiddleContainer(
+                    isLast
+                        ? StatusCard(status)
+                        : DividerContainer(child: StatusCard(status)),
                   );
                 },
                 childCount: threadProvider.descendants.length,

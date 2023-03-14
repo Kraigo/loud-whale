@@ -22,6 +22,10 @@ class StatusMedia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const height = 250;
+    const double space = 6;
+    double halfHeight = (height - space) / 2;
+
     if (attachments.isEmpty) {
       return Container();
     }
@@ -40,7 +44,7 @@ class StatusMedia extends StatelessWidget {
           children: [
             Flexible(child: _buildImage(context, attachments[0])),
             const SizedBox(
-              width: 5,
+              width: space,
             ),
             Flexible(child: _buildImage(context, attachments[1]))
           ],
@@ -48,12 +52,20 @@ class StatusMedia extends StatelessWidget {
       case 3:
         return Row(
           children: [
-            Flexible(child: _buildImage(context, attachments[0])),
+            Flexible(
+              child: _buildImage(context, attachments[0]),
+            ),
+            const SizedBox(
+              width: space,
+            ),
             Flexible(
               child: Column(
                 children: [
-                  _buildImage(context, attachments[1]),
-                  _buildImage(context, attachments[2])
+                  _buildImage(context, attachments[1], height: halfHeight),
+                  const SizedBox(
+                    height: space,
+                  ),
+                  _buildImage(context, attachments[2], height: halfHeight)
                 ],
               ),
             )
@@ -66,19 +78,19 @@ class StatusMedia extends StatelessWidget {
             Flexible(
               child: Column(
                 children: [
-                  _buildImage(context, attachments[0]),
-                  const SizedBox(height: 5),
-                  _buildImage(context, attachments[2])
+                  _buildImage(context, attachments[0], height: halfHeight),
+                  const SizedBox(height: space),
+                  _buildImage(context, attachments[2], height: halfHeight)
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: space),
             Flexible(
               child: Column(
                 children: [
-                  _buildImage(context, attachments[1]),
-                  const SizedBox(height: 5),
-                  _buildImage(context, attachments[3])
+                  _buildImage(context, attachments[1], height: halfHeight),
+                  const SizedBox(height: space),
+                  _buildImage(context, attachments[3], height: halfHeight)
                 ],
               ),
             )
@@ -87,57 +99,77 @@ class StatusMedia extends StatelessWidget {
     }
   }
 
-  Widget _buildImage(BuildContext context, AttachmentEntity attachment) {
+  Widget _buildImage(BuildContext context, AttachmentEntity attachment,
+      {double? height}) {
     return GestureDetector(
       onTap: () => {_previewImage(context, attachment)},
       child: StatusMediaPlaceholder(
+          height: height,
           child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Hero(
-            tag: attachment.id,
-            child: Image.network(
-              attachment.previewUrl,
-              alignment: const Alignment(0.5, 0.5),
-              fit: BoxFit.cover,
-            ),
-          ),
-          if (attachment.isVideo)
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.play_circle,
-                size: 60,
-                color: Theme.of(context).primaryColor.withOpacity(0.6),
+            fit: StackFit.expand,
+            children: [
+              Hero(
+                tag: attachment.id,
+                child: Image.network(
+                  attachment.previewUrl,
+                  alignment: const Alignment(0.5, 0.5),
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            left: 5,
-            bottom: 5,
-            child: AttachmentLabel(attachment),
-          )
-        ],
-      )),
+              if (attachment.isVideo)
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.play_circle,
+                      size: 60,
+                      color: Theme.of(context).primaryColor.withOpacity(0.6),
+                    ),
+                  ),
+                ),
+              Positioned(
+                left: 5,
+                bottom: 5,
+                child: AttachmentLabel(attachment),
+              )
+            ],
+          )),
     );
   }
 }
 
 class StatusMediaPlaceholder extends StatelessWidget {
   final Widget? child;
-  const StatusMediaPlaceholder({this.child, super.key});
+  final double? height;
+  final double borderRadius;
+  const StatusMediaPlaceholder({
+    height,
+    this.child,
+    this.borderRadius = 16,
+    super.key,
+  }) : height = height ?? 250;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 250,
+      height: height,
       width: double.infinity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: Container(
-          decoration: BoxDecoration(color: Theme.of(context).hintColor),
-          child: child,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).dividerColor,
+            width: 0.3,
+          ),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).hintColor,
+            ),
+            child: child,
+          ),
         ),
       ),
     );

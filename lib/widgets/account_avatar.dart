@@ -71,7 +71,7 @@ class AccountAvatarPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-        borderRadius: BorderRadius.circular(Constants.padding),
+        borderRadius: BorderRadius.circular(Constants.borderRadius),
         child: SizedBox(
           width: size,
           height: size,

@@ -18,6 +18,7 @@ class TimelineProvider extends ChangeNotifier {
 
   List<StatusEntity> _statuses = [];
   List<StatusEntity> get statuses => _statuses;
+  final pageSize = 20;
 
   TimelineProvider({
     required this.statusDao,
@@ -40,7 +41,28 @@ class TimelineProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline();
+      final resp = await MastodonHelper.api?.v1.timelines
+          .lookupHomeTimeline(limit: pageSize);
+      if (resp != null) {
+        await timelineDao.saveTimelineStatuses(resp.data);
+        await refresh();
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  loadTimelineMore() async {
+    if (_loading) return;
+
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final status = await statusDao.getOldestStatus();
+      final resp = await MastodonHelper.api?.v1.timelines
+          .lookupHomeTimeline(maxStatusId: status?.id, limit: pageSize);
       if (resp != null) {
         await timelineDao.saveTimelineStatuses(resp.data);
         await refresh();

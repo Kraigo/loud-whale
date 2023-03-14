@@ -21,21 +21,36 @@ class StatusCard extends StatelessWidget {
 
   StatusEntity get actualStatus => status.reblog ?? status;
 
+  _openThread(BuildContext context) async {
+    await Navigator.of(context)
+        .pushNamed(Routes.thread, arguments: {'statusId': actualStatus.id});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: padding,
-      child: Column(children: [
-        if (status.reblog != null) StatusCardReblogged(status.account!),
-        StatusCardHeader(status),
-        StatusCardContent(actualStatus),
-        if (actualStatus.mediaAttachments?.isNotEmpty ?? false)
-          StatusMedia(actualStatus.mediaAttachments ?? []),
-        const SizedBox(
-          height: 10,
-        ),
-        StatusCardActions(status)
-      ]),
+    return GestureDetector(
+      onTap: () => {_openThread(context)},
+      child: Padding(
+        padding: padding,
+        child: Column(children: [
+          if (status.reblog != null) StatusCardReblogged(status.account!),
+          StatusCardHeader(status),
+          if (actualStatus.hasContent ?? false)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: StatusCardContent(actualStatus),
+            ),
+          if (actualStatus.mediaAttachments?.isNotEmpty ?? false)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: StatusMedia(actualStatus.mediaAttachments ?? []),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: StatusCardActions(status),
+          )
+        ]),
+      ),
     );
   }
 }
@@ -122,11 +137,6 @@ class StatusCardContent extends StatelessWidget {
   final StatusEntity status;
   const StatusCardContent(this.status, {super.key});
 
-  _openThread(BuildContext context) async {
-    await Navigator.of(context)
-        .pushNamed(Routes.thread, arguments: {'statusId': status.id});
-  }
-
   _openLink(String url) async {
     await launchUrlString(url);
   }
@@ -136,29 +146,26 @@ class StatusCardContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => {_openThread(context)},
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Html(
-              style: {
-                'body': Style(
-                    padding: const EdgeInsets.all(0),
-                    margin: const EdgeInsets.all(0),
-                    lineHeight: LineHeight.em(1.4)),
-                'p': Style(
-                  margin: const EdgeInsets.all(0),
-                )
-              },
-              data: status.content,
-              onLinkTap: (url, context, attributes, element) {
-                debugPrint(url);
-                if (url != null) {
-                  _openLink(url);
-                }
-              },
+        Html(
+          style: {
+            'body': Style(
+                padding: const EdgeInsets.all(0),
+                margin: const EdgeInsets.all(0),
+                lineHeight: LineHeight.em(1.4)),
+            'p': Style(
+              margin: const EdgeInsets.all(0),
             ),
-          ),
+            'a': Style(
+              textDecoration: TextDecoration.none
+            )
+          },
+          data: status.content,
+          onLinkTap: (url, context, attributes, element) {
+            debugPrint(url);
+            if (url != null) {
+              _openLink(url);
+            }
+          },
         ),
       ],
     );
@@ -175,7 +182,7 @@ class StatusCardActions extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return ReplyDialog(
-            status: status,
+            status: status.reblog ?? status,
           );
         });
 
@@ -303,7 +310,7 @@ class StatusCardMenu extends StatelessWidget {
               label: 'Open link to post',
               iconData: Icons.open_in_new,
               onSelect: () async {
-                  await launchUrlString('${status.account!.url}/${status.id}');
+                await launchUrlString('${status.account!.url}/${status.id}');
               })
         ];
 

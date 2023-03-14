@@ -16,6 +16,7 @@ class HomeScreen extends StatelessWidget {
     return Row(
       children: const [
         _Sidebar(),
+        VerticalDivider(thickness: 1, width: 1),
         Expanded(child: _MainContent()),
       ],
     );
@@ -30,6 +31,7 @@ class _Sidebar extends StatelessWidget {
     final homeProvider = context.watch<HomeProvider>();
 
     return NavigationRail(
+      extended: false,
       destinations: [
         ...homeProvider.menuList.map(
           (e) => NavigationRailDestination(
@@ -43,6 +45,7 @@ class _Sidebar extends StatelessWidget {
         homeProvider.selectIndex(value);
       },
       selectedIndex: homeProvider.selectedIndex,
+      labelType: NavigationRailLabelType.selected,
     );
   }
 }

@@ -87,8 +87,14 @@ class _ReplyViewState extends State<ReplyView> {
         MiddleContainer(
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            child: StatusCardContent(widget.status),
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: Column(
+              children: [
+                StatusCardAccount(widget.status),
+                const SizedBox(height: 8),
+                StatusCardContent(widget.status),
+              ],
+            ),
           ),
         ),
         MiddleContainer(ComposeInput(

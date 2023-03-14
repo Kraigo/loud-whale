@@ -19,6 +19,7 @@ class StatusEntity {
   String? url;
   String uri;
   String content;
+  bool? hasContent;
 
   String spoilerText;
   String visibility;
@@ -53,6 +54,7 @@ class StatusEntity {
     this.url,
     required this.uri,
     required this.content,
+    required this.hasContent,
     required this.spoilerText,
     required this.visibility,
     required this.favouritesCount,
@@ -78,6 +80,10 @@ class StatusEntity {
         url: model.url,
         uri: model.uri,
         content: model.content,
+        hasContent: model.content
+            .replaceAll(RegExp(r'<[^>]+>'), '')
+            .replaceAll(RegExp('\u2063', unicode: true), '')
+            .isNotEmpty,
         spoilerText: model.spoilerText,
         visibility: model.visibility.value,
         favouritesCount: model.favouritesCount,

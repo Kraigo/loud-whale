@@ -12,10 +12,33 @@ class TimelineScreen extends StatefulWidget {
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
+  late ScrollController _scrollController;
+
   @override
   void initState() {
     Future.microtask(_loadInitial);
+    _scrollController = ScrollController();
+
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      const delta = 0;
+      if (maxScroll - currentScroll <= delta) {
+        _onLoadMore();
+      }
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  _onLoadMore() async {
+    final timelineProvider = context.read<TimelineProvider>();
+    timelineProvider.loadTimelineMore();
   }
 
   _loadInitial() async {
@@ -40,26 +63,28 @@ class _TimelineScreenState extends State<TimelineScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _pullRefresh,
-        child: const _TimelineList(),
+        child: _TimelineList(controller: _scrollController),
       ),
     );
   }
 }
 
 class _TimelineList extends StatelessWidget {
-  const _TimelineList();
+  final ScrollController? controller;
+  const _TimelineList({this.controller});
 
   @override
   Widget build(BuildContext context) {
     final timelineProvider = context.watch<TimelineProvider>();
     final statuses = timelineProvider.statuses;
     return ListView.separated(
+      controller: controller,
       itemBuilder: (context, index) {
         final item = statuses[index];
 
         return MiddleContainer(StatusCard(item));
       },
-      separatorBuilder: ((context, index) => const Divider()),
+      separatorBuilder: ((context, index) => const MiddleContainer(Divider())),
       itemCount: statuses.length,
     );
   }

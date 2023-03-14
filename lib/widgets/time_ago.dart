@@ -20,7 +20,7 @@ class TimeAgo extends StatelessWidget {
         ),
         Text(
           _format,
-          style: theme.textTheme.caption,
+          style: theme.textTheme.labelSmall!.copyWith(color: theme.hintColor),
         ),
       ],
     );

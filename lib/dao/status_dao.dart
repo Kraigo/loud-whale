@@ -73,4 +73,16 @@ abstract class StatusDao {
 
   @Query('DELETE FROM statuses')
   Future<void> deleteAllStatuses();
+
+  @Query('''
+  SELECT * FROM statuses
+  WHERE isReblogged IS false
+    AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)
+    AND id NOT IN (
+      SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id
+    )
+  ORDER BY createdAt ASC
+  LIMIT 1
+  ''')
+  Future<StatusEntity?> getOldestStatus();
 }

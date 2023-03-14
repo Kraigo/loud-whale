@@ -84,7 +84,12 @@ class MastodonApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-          primarySwatch: AppTheme.purple,
+          useMaterial3: true,
+          colorSchemeSeed: const Color(0x003088d4),
+          // colorScheme: ColorScheme.fromSwatch(primarySwatch: AppTheme.purple),
+          // scaffoldBackgroundColor: Colors.white,
+          // dividerColor: AppTheme.purple.shade100,
+          // hintColor: AppTheme.purple.shade100,
           appBarTheme: const AppBarTheme(
             elevation: 0,
           )),
