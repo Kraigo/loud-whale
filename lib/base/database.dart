@@ -23,6 +23,7 @@ part 'database.g.dart';
   entities: [
     AccountEntity,
     StatusEntity,
+    StatusHomeEntity,
     SettingEntity,
     AttachmentEntity,
     NotificationEntity,

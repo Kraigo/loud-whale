@@ -39,12 +39,12 @@ class _Sidebar extends StatelessWidget {
 
     return NavigationRail(
       extended: false,
-      leading: FloatingActionButton(
+      trailing: FloatingActionButton(
         onPressed: () {_onCompose(context);},
         elevation: 0,
         child: const Icon(Icons.edit),
       ),
-      groupAlignment: 0,
+      groupAlignment: -1,
       destinations: [
         ...homeProvider.menuList.map(
           (e) => NavigationRailDestination(

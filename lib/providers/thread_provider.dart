@@ -49,7 +49,7 @@ class ThreadProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .lookupStatusContext(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses(
+        await timelineDao.saveStatuses(
             [...resp.data.ancestors, ...resp.data.descendants]);
         await refresh(statusId);
       }
@@ -64,7 +64,7 @@ class ThreadProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .lookupStatus(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses([resp.data]);
+        await timelineDao.saveStatuses([resp.data]);
         await refresh(statusId);
       }
     } finally {

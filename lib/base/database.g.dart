@@ -101,6 +101,8 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `statuses` (`id` TEXT NOT NULL, `url` TEXT, `uri` TEXT NOT NULL, `content` TEXT NOT NULL, `hasContent` INTEGER, `spoilerText` TEXT NOT NULL, `visibility` TEXT NOT NULL, `favouritesCount` INTEGER NOT NULL, `repliesCount` INTEGER NOT NULL, `reblogsCount` INTEGER NOT NULL, `language` TEXT, `inReplyToId` TEXT, `inReplyToAccountId` TEXT, `isFavourited` INTEGER, `isReblogged` INTEGER, `isMuted` INTEGER, `isBookmarked` INTEGER, `isSensitive` INTEGER, `isPinned` INTEGER, `createdAt` INTEGER NOT NULL, `reblogId` TEXT, `accountId` TEXT NOT NULL, FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
+            'CREATE TABLE IF NOT EXISTS `homeStatuses` (`statusId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`statusId`))');
+        await database.execute(
             'CREATE TABLE IF NOT EXISTS `settings` (`name` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`name`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `statusId` TEXT NOT NULL, `type` INTEGER NOT NULL, `url` TEXT NOT NULL, `previewUrl` TEXT NOT NULL, `remoteUrl` TEXT, `description` TEXT, FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
@@ -199,6 +201,13 @@ class _$StatusDao extends StatusDao {
                   'createdAt': _dateTimeConverter.encode(item.createdAt),
                   'reblogId': item.reblogId,
                   'accountId': item.accountId
+                }),
+        _statusHomeEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'homeStatuses',
+            (StatusHomeEntity item) => <String, Object?>{
+                  'statusId': item.statusId,
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -209,45 +218,34 @@ class _$StatusDao extends StatusDao {
 
   final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
 
+  final InsertionAdapter<StatusHomeEntity> _statusHomeEntityInsertionAdapter;
+
   @override
-  Future<List<StatusEntity>> findAllStatuses() async {
+  Future<List<StatusEntity>> findAllStatuses(
+    int limit,
+    int skip,
+  ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC',
-        mapper: (Map<String, Object?> row) => StatusEntity(
-            id: row['id'] as String,
-            url: row['url'] as String?,
-            uri: row['uri'] as String,
-            content: row['content'] as String,
-            hasContent: row['hasContent'] == null
-                ? null
-                : (row['hasContent'] as int) != 0,
-            spoilerText: row['spoilerText'] as String,
-            visibility: row['visibility'] as String,
-            favouritesCount: row['favouritesCount'] as int,
-            repliesCount: row['repliesCount'] as int,
-            reblogsCount: row['reblogsCount'] as int,
-            language: row['language'] as String?,
-            inReplyToId: row['inReplyToId'] as String?,
-            inReplyToAccountId: row['inReplyToAccountId'] as String?,
-            isFavourited: row['isFavourited'] == null
-                ? null
-                : (row['isFavourited'] as int) != 0,
-            isReblogged: row['isReblogged'] == null
-                ? null
-                : (row['isReblogged'] as int) != 0,
-            isMuted:
-                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
-            isBookmarked: row['isBookmarked'] == null
-                ? null
-                : (row['isBookmarked'] as int) != 0,
-            isSensitive: row['isSensitive'] == null
-                ? null
-                : (row['isSensitive'] as int) != 0,
-            isPinned:
-                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
-            reblogId: row['reblogId'] as String?,
-            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String));
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC   LIMIT ?1   OFFSET ?2',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<List<StatusEntity>> findAllHomeStatuses(
+    int limit,
+    int skip,
+  ) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2   )   ORDER BY createdAt DESC',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<int?> countAllHomeStatuses() async {
+    return _queryAdapter.query('SELECT COUNT(statusId) FROM homeStatuses',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
   }
 
   @override
@@ -354,9 +352,14 @@ class _$StatusDao extends StatusDao {
   }
 
   @override
+  Future<void> deleteAllHomeStatuses() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM homeStatuses');
+  }
+
+  @override
   Future<StatusEntity?> getOldestStatus() async {
     return _queryAdapter.query(
-        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt ASC   LIMIT 1',
+        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt ASC     LIMIT 1   )',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -403,6 +406,12 @@ class _$StatusDao extends StatusDao {
   @override
   Future<void> insertStatuses(List<StatusEntity> statuses) async {
     await _statusEntityInsertionAdapter.insertList(
+        statuses, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertHomeStatuses(List<StatusHomeEntity> statuses) async {
+    await _statusHomeEntityInsertionAdapter.insertList(
         statuses, OnConflictStrategy.replace);
   }
 }
@@ -826,6 +835,13 @@ class _$TimelineDao extends TimelineDao {
                   'reblogId': item.reblogId,
                   'accountId': item.accountId
                 }),
+        _statusHomeEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'homeStatuses',
+            (StatusHomeEntity item) => <String, Object?>{
+                  'statusId': item.statusId,
+                  'createdAt': _dateTimeConverter.encode(item.createdAt)
+                }),
         _accountEntityInsertionAdapter = InsertionAdapter(
             database,
             'accounts',
@@ -902,6 +918,8 @@ class _$TimelineDao extends TimelineDao {
 
   final InsertionAdapter<StatusEntity> _statusEntityInsertionAdapter;
 
+  final InsertionAdapter<StatusHomeEntity> _statusHomeEntityInsertionAdapter;
+
   final InsertionAdapter<AccountEntity> _accountEntityInsertionAdapter;
 
   final InsertionAdapter<AttachmentEntity> _attachmentEntityInsertionAdapter;
@@ -912,44 +930,31 @@ class _$TimelineDao extends TimelineDao {
   final DeletionAdapter<AccountEntity> _accountEntityDeletionAdapter;
 
   @override
-  Future<List<StatusEntity>> findAllStatuses() async {
+  Future<List<StatusEntity>> findAllStatuses(
+    int limit,
+    int skip,
+  ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC',
-        mapper: (Map<String, Object?> row) => StatusEntity(
-            id: row['id'] as String,
-            url: row['url'] as String?,
-            uri: row['uri'] as String,
-            content: row['content'] as String,
-            hasContent: row['hasContent'] == null
-                ? null
-                : (row['hasContent'] as int) != 0,
-            spoilerText: row['spoilerText'] as String,
-            visibility: row['visibility'] as String,
-            favouritesCount: row['favouritesCount'] as int,
-            repliesCount: row['repliesCount'] as int,
-            reblogsCount: row['reblogsCount'] as int,
-            language: row['language'] as String?,
-            inReplyToId: row['inReplyToId'] as String?,
-            inReplyToAccountId: row['inReplyToAccountId'] as String?,
-            isFavourited: row['isFavourited'] == null
-                ? null
-                : (row['isFavourited'] as int) != 0,
-            isReblogged: row['isReblogged'] == null
-                ? null
-                : (row['isReblogged'] as int) != 0,
-            isMuted:
-                row['isMuted'] == null ? null : (row['isMuted'] as int) != 0,
-            isBookmarked: row['isBookmarked'] == null
-                ? null
-                : (row['isBookmarked'] as int) != 0,
-            isSensitive: row['isSensitive'] == null
-                ? null
-                : (row['isSensitive'] as int) != 0,
-            isPinned:
-                row['isPinned'] == null ? null : (row['isPinned'] as int) != 0,
-            reblogId: row['reblogId'] as String?,
-            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
-            accountId: row['accountId'] as String));
+        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt DESC   LIMIT ?1   OFFSET ?2',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<List<StatusEntity>> findAllHomeStatuses(
+    int limit,
+    int skip,
+  ) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2   )   ORDER BY createdAt DESC',
+        mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<int?> countAllHomeStatuses() async {
+    return _queryAdapter.query('SELECT COUNT(statusId) FROM homeStatuses',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
   }
 
   @override
@@ -1056,9 +1061,14 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> deleteAllHomeStatuses() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM homeStatuses');
+  }
+
+  @override
   Future<StatusEntity?> getOldestStatus() async {
     return _queryAdapter.query(
-        'SELECT * FROM statuses   WHERE isReblogged IS false     AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)     AND id NOT IN (       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id     )   ORDER BY createdAt ASC   LIMIT 1',
+        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt ASC     LIMIT 1   )',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -1298,6 +1308,12 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> insertHomeStatuses(List<StatusHomeEntity> statuses) async {
+    await _statusHomeEntityInsertionAdapter.insertList(
+        statuses, OnConflictStrategy.replace);
+  }
+
+  @override
   Future<void> insertAccount(AccountEntity account) async {
     await _accountEntityInsertionAdapter.insert(
         account, OnConflictStrategy.replace);
@@ -1340,15 +1356,15 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Future<void> saveTimelineStatuses(List<Status> statuses) async {
+  Future<void> saveStatuses(List<Status> statuses) async {
     if (database is sqflite.Transaction) {
-      await super.saveTimelineStatuses(statuses);
+      await super.saveStatuses(statuses);
     } else {
       await (database as sqflite.Database)
           .transaction<void>((transaction) async {
         final transactionDatabase = _$AppDatabase(changeListener)
           ..database = transaction;
-        await transactionDatabase.timelineDao.saveTimelineStatuses(statuses);
+        await transactionDatabase.timelineDao.saveStatuses(statuses);
       });
     }
   }

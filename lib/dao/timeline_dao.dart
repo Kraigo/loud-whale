@@ -10,7 +10,7 @@ import 'package:mastodon_api/mastodon_api.dart';
 abstract class TimelineDao
     with StatusDao, AccountDao, AttachmentDao, NotificationDao {
   @transaction
-  Future<void> saveTimelineStatuses(List<Status> statuses) async {
+  Future<void> saveStatuses(List<Status> statuses) async {
     List<StatusEntity> statusesEntries = [];
     List<AccountEntity> accountsEntries = [];
     List<AttachmentEntity> attachmentsEntries = [];
@@ -38,6 +38,15 @@ abstract class TimelineDao
     await insertAccounts(accountsEntries);
     await insertStatuses(statusesEntries);
     await insertAttachments(attachmentsEntries);
+  }
+
+  Future<void> saveHomeStatuses(List<Status> statuses) async {
+    await insertHomeStatuses(
+      statuses
+          .where((element) => element.isReblogged == false)
+          .map((e) => StatusHomeEntity.fromModel(e))
+          .toList(),
+    );
   }
 
   Future<NotificationEntity?> populateNotification(

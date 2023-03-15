@@ -22,7 +22,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
     _scrollController.addListener(() {
       final maxScroll = _scrollController.position.maxScrollExtent;
       final currentScroll = _scrollController.position.pixels;
-      const delta = 0;
+      const delta = 100;
       if (maxScroll - currentScroll <= delta) {
         _onLoadMore();
       }
@@ -55,7 +55,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Timeline"),
+        title: Text("Timeline ${context.watch<TimelineProvider>().statuses.length}"),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(3.0),
           child: _TimelineLoading(),

@@ -37,7 +37,7 @@ class NotificationsProvider extends ChangeNotifier {
         final notifications =
             resp.data.map(NotificationEntity.fromModel).toList();
         await notificationDao.insertNotifications(notifications);
-        await timelineDao.saveTimelineStatuses(resp.data
+        await timelineDao.saveStatuses(resp.data
             .where((e) => e.status != null)
             .map((e) => e.status!)
             .toList());

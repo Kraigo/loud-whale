@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mastodon/base/constants.dart';
 
 class AccountAvatar extends StatelessWidget {
   final String? avatar;
@@ -7,10 +6,9 @@ class AccountAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AvatarSized(
-      child: AccountAvatarPlaceholder(
-        child: avatar != null ? Image.network(avatar!) : null,
-      ),
+    return AccountAvatarPlaceholder(
+      size: 40,
+      child: avatar != null ? Image.network(avatar!) : null,
     );
   }
 }
@@ -26,7 +24,9 @@ class AccountAvatarReblogged extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AvatarSized(
+    return SizedBox(
+      width: 40,
+      height: 40,
       child: Stack(children: [
         AccountAvatarPlaceholder(
           size: 34,
@@ -45,23 +45,6 @@ class AccountAvatarReblogged extends StatelessWidget {
   }
 }
 
-class AvatarSized extends StatelessWidget {
-  final Widget child;
-  const AvatarSized({
-    required this.child,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: child,
-    );
-  }
-}
-
 class AccountAvatarPlaceholder extends StatelessWidget {
   final Widget? child;
   final double? size;
@@ -71,7 +54,7 @@ class AccountAvatarPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-        borderRadius: BorderRadius.circular(Constants.borderRadius),
+        borderRadius: BorderRadius.circular(borderRadius),
         child: SizedBox(
           width: size,
           height: size,
@@ -81,4 +64,6 @@ class AccountAvatarPlaceholder extends StatelessWidget {
           ),
         ));
   }
+
+  get borderRadius => size != null ? size! * 0.3 : 10;
 }

@@ -32,11 +32,12 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     final database = context.read<AppDatabase>();
 
     try {
-      await database.accountDao.deleteAllAccounts();
       await database.attachmentDao.deleteAllAttachments();
       await database.notificationDao.deleteAllNotifications();
       await database.relationshipDao.deleteAllRelationships();
+      await database.statusDao.deleteAllHomeStatuses();
       await database.statusDao.deleteAllStatuses();
+      await database.accountDao.deleteAllAccounts();
       await database.settingDao.vacuum();
     } catch (e) {
       debugPrint('Failed to clean cache');

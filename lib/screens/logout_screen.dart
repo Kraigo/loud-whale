@@ -23,12 +23,14 @@ class _LogoutScreenState extends State<LogoutScreen> {
     final navigator = Navigator.of(context);
     await context.read<AuthorizationProvider>().removeAuthorization();
 
-    await database.accountDao.deleteAllAccounts();
     await database.attachmentDao.deleteAllAttachments();
     await database.notificationDao.deleteAllNotifications();
     await database.relationshipDao.deleteAllRelationships();
     await database.settingDao.deleteAllSettings();
+    await database.statusDao.deleteAllHomeStatuses();
     await database.statusDao.deleteAllStatuses();
+    await database.accountDao.deleteAllAccounts();
+    await database.settingDao.vacuum();
 
     await navigator.pushNamedAndRemoveUntil(
         Routes.start, ModalRoute.withName(Routes.start));

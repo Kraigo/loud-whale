@@ -11,8 +11,27 @@ abstract class StatusDao {
       SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id
     )
   ORDER BY createdAt DESC
+  LIMIT :limit
+  OFFSET :skip
   ''')
-  Future<List<StatusEntity>> findAllStatuses();
+  Future<List<StatusEntity>> findAllStatuses(int limit, int skip);
+
+  @Query('''
+  SELECT * FROM statuses
+  WHERE id IN (
+    SELECT statusId from homeStatuses
+    ORDER BY createdAt DESC
+    LIMIT :limit
+    OFFSET :skip
+  )
+  ORDER BY createdAt DESC
+  ''')
+  Future<List<StatusEntity>> findAllHomeStatuses(int limit, int skip);
+
+  @Query('''
+  SELECT COUNT(statusId) FROM homeStatuses
+  ''')
+  Future<int?> countAllHomeStatuses();
 
   @Query('SELECT * FROM statuses WHERE id = :id')
   Future<StatusEntity?> findStatusById(String id);
@@ -71,18 +90,22 @@ abstract class StatusDao {
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertStatuses(List<StatusEntity> statuses);
 
+  @Insert(onConflict: OnConflictStrategy.replace)
+  Future<void> insertHomeStatuses(List<StatusHomeEntity> statuses);
+
   @Query('DELETE FROM statuses')
   Future<void> deleteAllStatuses();
 
+  @Query('DELETE FROM homeStatuses')
+  Future<void> deleteAllHomeStatuses();
+
   @Query('''
   SELECT * FROM statuses
-  WHERE isReblogged IS false
-    AND (inReplyToAccountId = statuses.accountId OR inReplyToId IS NULL)
-    AND id NOT IN (
-      SELECT reblogId FROM statuses as reblogs WHERE reblogs.reblogId = statuses.id
-    )
-  ORDER BY createdAt ASC
-  LIMIT 1
+  WHERE id IN (
+    SELECT statusId from homeStatuses
+    ORDER BY createdAt ASC
+    LIMIT 1
+  )
   ''')
   Future<StatusEntity?> getOldestStatus();
 }

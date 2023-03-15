@@ -28,11 +28,24 @@ class TimelineProvider extends ChangeNotifier {
   });
 
   Future<void> refresh() async {
-    _statuses = await statusDao.findAllStatuses();
+    final limit = _statuses.isNotEmpty ? _statuses.length : pageSize;
+    const skip = 0;
+    _statuses = await statusDao.findAllHomeStatuses(limit, skip);
     for (var s in _statuses) {
       await timelineDao.populateStatus(s);
     }
     sortStatusesByReply(_statuses, offset: const Duration(minutes: 10));
+    notifyListeners();
+  }
+
+  Future<void> appendStatuses() async {
+    final limit = pageSize;
+    final skip = _statuses.length;
+    final moreStatuses = await statusDao.findAllHomeStatuses(limit, skip);
+    for (var s in moreStatuses) {
+      await timelineDao.populateStatus(s);
+    }
+    _statuses.addAll(moreStatuses);
     notifyListeners();
   }
 
@@ -44,7 +57,9 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.timelines
           .lookupHomeTimeline(limit: pageSize);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses(resp.data);
+        await timelineDao.saveStatuses(resp.data);
+        await timelineDao.saveHomeStatuses(resp.data);
+        _statuses.clear();
         await refresh();
       }
     } finally {
@@ -59,12 +74,23 @@ class TimelineProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
+    final count = await statusDao.countAllHomeStatuses();
+
+    if (count != null && count > _statuses.length) {
+      await appendStatuses();
+      await Future.delayed(const Duration(milliseconds: 100));
+      _loading = false;
+      notifyListeners();
+      return;
+    }
+
     try {
       final status = await statusDao.getOldestStatus();
       final resp = await MastodonHelper.api?.v1.timelines
           .lookupHomeTimeline(maxStatusId: status?.id, limit: pageSize);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses(resp.data);
+        await timelineDao.saveStatuses(resp.data);
+        await timelineDao.saveHomeStatuses(resp.data);
         await refresh();
       }
     } finally {
@@ -78,7 +104,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .destroyFavourite(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses([resp.data]);
+        await timelineDao.saveStatuses([resp.data]);
         await refresh();
       }
     } finally {
@@ -91,7 +117,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .createFavourite(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses([resp.data]);
+        await timelineDao.saveStatuses([resp.data]);
         await refresh();
       }
     } finally {
@@ -104,7 +130,7 @@ class TimelineProvider extends ChangeNotifier {
       final resp = await MastodonHelper.api?.v1.statuses
           .createReblog(statusId: statusId);
       if (resp != null) {
-        await timelineDao.saveTimelineStatuses([resp.data]);
+        await timelineDao.saveStatuses([resp.data]);
         await refresh();
       }
     } finally {
