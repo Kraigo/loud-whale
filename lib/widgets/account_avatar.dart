@@ -59,7 +59,7 @@ class AccountAvatarPlaceholder extends StatelessWidget {
           width: size,
           height: size,
           child: Container(
-            // decoration: BoxDecoration(color: Theme.of(context).disabledColor),
+            decoration: BoxDecoration(color: Theme.of(context).focusColor),
             child: child,
           ),
         ));

@@ -17,7 +17,10 @@ import 'package:mastodon/enties/entries.dart';
 
 part 'database.g.dart';
 
-@TypeConverters([DateTimeConverter])
+@TypeConverters([
+  DateTimeConverter,
+  DateTimeNullableConverter,
+])
 @Database(
   version: 1,
   entities: [
@@ -28,6 +31,7 @@ part 'database.g.dart';
     AttachmentEntity,
     NotificationEntity,
     RelationshipEntity,
+    PollEntity
   ],
   views: [
     DatabaseInfo,

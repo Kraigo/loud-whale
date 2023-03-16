@@ -6,8 +6,15 @@ abstract class NotificationDao {
   @Query('''
     SELECT * FROM notifications
     ORDER BY createdAt DESC
+    LIMIT :limit
+    OFFSET :skip
   ''')
-  Future<List<NotificationEntity>> findAllNotifications();
+  Future<List<NotificationEntity>> findNotifications(int limit, int skip);
+
+  @Query('''
+    SELECT COUNT(statusId) FROM notifications
+  ''')
+  Future<int?> countNotifications();
 
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertNotification(NotificationEntity notification);
@@ -15,6 +22,15 @@ abstract class NotificationDao {
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertNotifications(List<NotificationEntity> notifications);
 
-  @Query('DELETE FROM notifications')
+  @Query('''
+    DELETE FROM notifications
+  ''')
   Future<void> deleteAllNotifications();
+
+  @Query('''
+    SELECT * FROM notifications
+    ORDER BY createdAt ASC
+    LIMIT 1
+  ''')
+  Future<NotificationEntity?> getOldestNotification();
 }

@@ -45,6 +45,9 @@ class StatusCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 12),
               child: StatusMedia(actualStatus.mediaAttachments ?? []),
             ),
+
+          if (actualStatus.poll != null) 
+            StatusPoll(poll: actualStatus.poll!),
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: StatusCardActions(status),

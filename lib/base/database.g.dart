@@ -110,6 +110,8 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `notifications` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `accountId` TEXT NOT NULL, `statusId` TEXT, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `relationships` (`id` TEXT NOT NULL, `isFollowing` INTEGER NOT NULL, `isFollowed` INTEGER NOT NULL, `isBlocking` INTEGER NOT NULL, `isBlocked` INTEGER NOT NULL, `isMuting` INTEGER NOT NULL, `accountId` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `polls` (`id` TEXT NOT NULL, `statusId` TEXT NOT NULL, `votesCount` INTEGER NOT NULL, `isMultiple` INTEGER NOT NULL, `isVoted` INTEGER, `isExpired` INTEGER NOT NULL, `expiresAt` INTEGER, `optionsData` TEXT NOT NULL, `ownVotesData` TEXT, PRIMARY KEY (`id`))');
 
         await database.execute(
             'CREATE VIEW IF NOT EXISTS `DATABASE_INFO` AS SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();');
@@ -237,7 +239,7 @@ class _$StatusDao extends StatusDao {
     int skip,
   ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2   )   ORDER BY createdAt DESC',
+        'SELECT * FROM statuses     WHERE id IN (       SELECT statusId from homeStatuses       ORDER BY createdAt DESC       LIMIT ?1       OFFSET ?2     )     ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [limit, skip]);
   }
@@ -292,7 +294,7 @@ class _$StatusDao extends StatusDao {
   @override
   Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
     return _queryAdapter.queryList(
-        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
+        'WITH RECURSIVE        descendants(id, inReplyToId) AS (         SELECT statuses.id, statuses.inReplyToId         FROM statuses          WHERE statuses.inReplyToId = ?1         UNION ALL                  SELECT statuses.id, statuses.inReplyToId         FROM descendants         JOIN statuses ON descendants.id = statuses.inReplyToId       )       SELECT *       FROM statuses       WHERE id IN (         SELECT id          FROM descendants       )       ORDER BY createdAt ASC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
@@ -300,7 +302,7 @@ class _$StatusDao extends StatusDao {
   @override
   Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
     return _queryAdapter.queryList(
-        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
+        'WITH RECURSIVE        descendants(id, inReplyToId) AS (         SELECT statuses.id, statuses.inReplyToId         FROM statuses          WHERE statuses.id = ?1         UNION ALL                  SELECT statuses.id, statuses.inReplyToId         FROM descendants         JOIN statuses ON descendants.inReplyToId = statuses.id       )       SELECT *       FROM statuses       WHERE id IN (         SELECT id          FROM descendants         WHERE id <> ?1       )       ORDER BY createdAt ASC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
@@ -359,7 +361,7 @@ class _$StatusDao extends StatusDao {
   @override
   Future<StatusEntity?> getOldestStatus() async {
     return _queryAdapter.query(
-        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt ASC     LIMIT 1   )',
+        'SELECT * FROM statuses     WHERE id IN (       SELECT statusId from homeStatuses       ORDER BY createdAt ASC       LIMIT 1     )',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -886,6 +888,22 @@ class _$TimelineDao extends TimelineDao {
                   'accountId': item.accountId,
                   'statusId': item.statusId
                 }),
+        _pollEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'polls',
+            (PollEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'statusId': item.statusId,
+                  'votesCount': item.votesCount,
+                  'isMultiple': item.isMultiple ? 1 : 0,
+                  'isVoted':
+                      item.isVoted == null ? null : (item.isVoted! ? 1 : 0),
+                  'isExpired': item.isExpired ? 1 : 0,
+                  'expiresAt':
+                      _dateTimeNullableConverter.encode(item.expiresAt),
+                  'optionsData': item.optionsData,
+                  'ownVotesData': item.ownVotesData
+                }),
         _accountEntityDeletionAdapter = DeletionAdapter(
             database,
             'accounts',
@@ -927,6 +945,8 @@ class _$TimelineDao extends TimelineDao {
   final InsertionAdapter<NotificationEntity>
       _notificationEntityInsertionAdapter;
 
+  final InsertionAdapter<PollEntity> _pollEntityInsertionAdapter;
+
   final DeletionAdapter<AccountEntity> _accountEntityDeletionAdapter;
 
   @override
@@ -946,7 +966,7 @@ class _$TimelineDao extends TimelineDao {
     int skip,
   ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2   )   ORDER BY createdAt DESC',
+        'SELECT * FROM statuses     WHERE id IN (       SELECT statusId from homeStatuses       ORDER BY createdAt DESC       LIMIT ?1       OFFSET ?2     )     ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [limit, skip]);
   }
@@ -1001,7 +1021,7 @@ class _$TimelineDao extends TimelineDao {
   @override
   Future<List<StatusEntity>> findStatusRepliesDescendants(String id) async {
     return _queryAdapter.queryList(
-        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.inReplyToId = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.id = statuses.inReplyToId     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants     )     ORDER BY createdAt ASC',
+        'WITH RECURSIVE        descendants(id, inReplyToId) AS (         SELECT statuses.id, statuses.inReplyToId         FROM statuses          WHERE statuses.inReplyToId = ?1         UNION ALL                  SELECT statuses.id, statuses.inReplyToId         FROM descendants         JOIN statuses ON descendants.id = statuses.inReplyToId       )       SELECT *       FROM statuses       WHERE id IN (         SELECT id          FROM descendants       )       ORDER BY createdAt ASC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
@@ -1009,7 +1029,7 @@ class _$TimelineDao extends TimelineDao {
   @override
   Future<List<StatusEntity>> findStatusRepliesAncestors(String id) async {
     return _queryAdapter.queryList(
-        'WITH RECURSIVE      descendants(id, inReplyToId) AS (       SELECT statuses.id, statuses.inReplyToId       FROM statuses        WHERE statuses.id = ?1       UNION ALL              SELECT statuses.id, statuses.inReplyToId       FROM descendants       JOIN statuses ON descendants.inReplyToId = statuses.id     )     SELECT *     FROM statuses     WHERE id IN (       SELECT id        FROM descendants       WHERE id <> ?1     )     ORDER BY createdAt ASC',
+        'WITH RECURSIVE        descendants(id, inReplyToId) AS (         SELECT statuses.id, statuses.inReplyToId         FROM statuses          WHERE statuses.id = ?1         UNION ALL                  SELECT statuses.id, statuses.inReplyToId         FROM descendants         JOIN statuses ON descendants.inReplyToId = statuses.id       )       SELECT *       FROM statuses       WHERE id IN (         SELECT id          FROM descendants         WHERE id <> ?1       )       ORDER BY createdAt ASC',
         mapper: (Map<String, Object?> row) => StatusEntity(id: row['id'] as String, url: row['url'] as String?, uri: row['uri'] as String, content: row['content'] as String, hasContent: row['hasContent'] == null ? null : (row['hasContent'] as int) != 0, spoilerText: row['spoilerText'] as String, visibility: row['visibility'] as String, favouritesCount: row['favouritesCount'] as int, repliesCount: row['repliesCount'] as int, reblogsCount: row['reblogsCount'] as int, language: row['language'] as String?, inReplyToId: row['inReplyToId'] as String?, inReplyToAccountId: row['inReplyToAccountId'] as String?, isFavourited: row['isFavourited'] == null ? null : (row['isFavourited'] as int) != 0, isReblogged: row['isReblogged'] == null ? null : (row['isReblogged'] as int) != 0, isMuted: row['isMuted'] == null ? null : (row['isMuted'] as int) != 0, isBookmarked: row['isBookmarked'] == null ? null : (row['isBookmarked'] as int) != 0, isSensitive: row['isSensitive'] == null ? null : (row['isSensitive'] as int) != 0, isPinned: row['isPinned'] == null ? null : (row['isPinned'] as int) != 0, reblogId: row['reblogId'] as String?, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String),
         arguments: [id]);
   }
@@ -1068,7 +1088,7 @@ class _$TimelineDao extends TimelineDao {
   @override
   Future<StatusEntity?> getOldestStatus() async {
     return _queryAdapter.query(
-        'SELECT * FROM statuses   WHERE id IN (     SELECT statusId from homeStatuses     ORDER BY createdAt ASC     LIMIT 1   )',
+        'SELECT * FROM statuses     WHERE id IN (       SELECT statusId from homeStatuses       ORDER BY createdAt ASC       LIMIT 1     )',
         mapper: (Map<String, Object?> row) => StatusEntity(
             id: row['id'] as String,
             url: row['url'] as String?,
@@ -1279,9 +1299,31 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Future<List<NotificationEntity>> findAllNotifications() async {
+  Future<List<NotificationEntity>> findNotifications(
+    int limit,
+    int skip,
+  ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM notifications     ORDER BY createdAt DESC',
+        'SELECT * FROM notifications     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2',
+        mapper: (Map<String, Object?> row) => NotificationEntity(id: row['id'] as String, type: row['type'] as String, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String, statusId: row['statusId'] as String?),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<int?> countNotifications() async {
+    return _queryAdapter.query('SELECT COUNT(statusId) FROM notifications',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<void> deleteAllNotifications() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
+  }
+
+  @override
+  Future<NotificationEntity?> getOldestNotification() async {
+    return _queryAdapter.query(
+        'SELECT * FROM notifications     ORDER BY createdAt ASC     LIMIT 1',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,
@@ -1291,8 +1333,26 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
-  Future<void> deleteAllNotifications() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
+  Future<PollEntity?> findPollByStatustId(String statusId) async {
+    return _queryAdapter.query('SELECT * FROM polls WHERE statusId = ?1',
+        mapper: (Map<String, Object?> row) => PollEntity(
+            id: row['id'] as String,
+            statusId: row['statusId'] as String,
+            votesCount: row['votesCount'] as int,
+            isMultiple: (row['isMultiple'] as int) != 0,
+            isVoted:
+                row['isVoted'] == null ? null : (row['isVoted'] as int) != 0,
+            isExpired: (row['isExpired'] as int) != 0,
+            expiresAt:
+                _dateTimeNullableConverter.decode(row['expiresAt'] as int?),
+            optionsData: row['optionsData'] as String,
+            ownVotesData: row['ownVotesData'] as String?),
+        arguments: [statusId]);
+  }
+
+  @override
+  Future<void> deleteAllPoll() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM polls');
   }
 
   @override
@@ -1351,6 +1411,17 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<void> insertPoll(PollEntity poll) async {
+    await _pollEntityInsertionAdapter.insert(poll, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertPolls(List<PollEntity> polls) async {
+    await _pollEntityInsertionAdapter.insertList(
+        polls, OnConflictStrategy.replace);
+  }
+
+  @override
   Future<void> deleteAccount(AccountEntity account) async {
     await _accountEntityDeletionAdapter.delete(account);
   }
@@ -1365,6 +1436,20 @@ class _$TimelineDao extends TimelineDao {
         final transactionDatabase = _$AppDatabase(changeListener)
           ..database = transaction;
         await transactionDatabase.timelineDao.saveStatuses(statuses);
+      });
+    }
+  }
+
+  @override
+  Future<void> saveNotifications(List<Notification> notifications) async {
+    if (database is sqflite.Transaction) {
+      await super.saveNotifications(notifications);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.timelineDao.saveNotifications(notifications);
       });
     }
   }
@@ -1411,20 +1496,37 @@ class _$NotificationDao extends NotificationDao {
       _notificationEntityInsertionAdapter;
 
   @override
-  Future<List<NotificationEntity>> findAllNotifications() async {
+  Future<List<NotificationEntity>> findNotifications(
+    int limit,
+    int skip,
+  ) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM notifications     ORDER BY createdAt DESC',
+        'SELECT * FROM notifications     ORDER BY createdAt DESC     LIMIT ?1     OFFSET ?2',
+        mapper: (Map<String, Object?> row) => NotificationEntity(id: row['id'] as String, type: row['type'] as String, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), accountId: row['accountId'] as String, statusId: row['statusId'] as String?),
+        arguments: [limit, skip]);
+  }
+
+  @override
+  Future<int?> countNotifications() async {
+    return _queryAdapter.query('SELECT COUNT(statusId) FROM notifications',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<void> deleteAllNotifications() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
+  }
+
+  @override
+  Future<NotificationEntity?> getOldestNotification() async {
+    return _queryAdapter.query(
+        'SELECT * FROM notifications     ORDER BY createdAt ASC     LIMIT 1',
         mapper: (Map<String, Object?> row) => NotificationEntity(
             id: row['id'] as String,
             type: row['type'] as String,
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
             statusId: row['statusId'] as String?));
-  }
-
-  @override
-  Future<void> deleteAllNotifications() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM notifications');
   }
 
   @override
@@ -1525,3 +1627,4 @@ class _$RelationshipDao extends RelationshipDao {
 
 // ignore_for_file: unused_element
 final _dateTimeConverter = DateTimeConverter();
+final _dateTimeNullableConverter = DateTimeNullableConverter();

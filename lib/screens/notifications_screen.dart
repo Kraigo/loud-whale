@@ -11,10 +11,33 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  late ScrollController _scrollController;
+
   @override
   void initState() {
     Future.microtask(_loadInitial);
+    _scrollController = ScrollController();
+
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      const delta = 100;
+      if (maxScroll - currentScroll <= delta) {
+        _onLoadMore();
+      }
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  _onLoadMore() async {
+    final notificationsProvider = context.read<NotificationsProvider>();
+    notificationsProvider.loadNotificationsMore();
   }
 
   _loadInitial() async {
@@ -36,6 +59,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ),
         body: ListView.separated(
+          controller: _scrollController,
           itemCount: notifications.length,
           itemBuilder: (context, index) {
             final item = notifications[index];

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +15,7 @@ class TimelineScreen extends StatefulWidget {
 
 class _TimelineScreenState extends State<TimelineScreen> {
   late ScrollController _scrollController;
+  late Timer _refreshTimer;
 
   @override
   void initState() {
@@ -27,12 +30,19 @@ class _TimelineScreenState extends State<TimelineScreen> {
         _onLoadMore();
       }
     });
+
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      final timelineProvider = context.read<TimelineProvider>();
+      timelineProvider.refresh();
+    });
+    
     super.initState();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _refreshTimer.cancel();
     super.dispose();
   }
 
@@ -55,7 +65,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Timeline ${context.watch<TimelineProvider>().statuses.length}"),
+        title: const Text("Timeline"),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(3.0),
           child: _TimelineLoading(),

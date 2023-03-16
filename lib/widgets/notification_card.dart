@@ -76,10 +76,10 @@ class NotificationCard extends StatelessWidget {
                   children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         if (notification.account != null)
-                          _NotificationAccount(notification),
-                        const Spacer(),
+                          Expanded(child: _NotificationAccount(notification)),
                         _NotificationDate(notification),
                       ],
                     ),
@@ -122,14 +122,24 @@ class _NotificationAccount extends StatelessWidget {
           const SizedBox(
             height: 5,
           ),
-          Text.rich(TextSpan(children: [
-            TextSpan(
-              text: account.displayName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const TextSpan(text: ' '),
-            TextSpan(text: notificationTypeText)
-          ])),
+          // Row(children: [
+          //   Text(
+          //       account.displayName,
+          //       style: const TextStyle(fontWeight: FontWeight.bold),),
+          //       Text(' '),
+          //       Text(notificationTypeText)
+          // ],),
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                text: account.displayName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const TextSpan(text: ' '),
+              TextSpan(text: notificationTypeText)
+            ]),
+            softWrap: true,
+          ),
         ],
       ),
     );

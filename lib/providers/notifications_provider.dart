@@ -12,6 +12,7 @@ class NotificationsProvider extends ChangeNotifier {
 
   NotificationDao notificationDao;
   TimelineDao timelineDao;
+  final pageSize = 20;
 
   NotificationsProvider({
     required this.notificationDao,
@@ -19,10 +20,23 @@ class NotificationsProvider extends ChangeNotifier {
   });
 
   Future<void> refresh() async {
-    _notifications = await notificationDao.findAllNotifications();
+    final limit = _notifications.isNotEmpty ? _notifications.length : pageSize;
+    const skip = 0;
+    _notifications = await notificationDao.findNotifications(limit, skip);
     for (var n in _notifications) {
       await timelineDao.populateNotification(n);
     }
+    notifyListeners();
+  }
+
+  Future<void> appendNotifications() async {
+    final limit = pageSize;
+    final skip = _notifications.length;
+    final moreNotifications = await notificationDao.findNotifications(limit, skip);
+    for (var n in moreNotifications) {
+      await timelineDao.populateNotification(n);
+    }
+    _notifications.addAll(moreNotifications);
     notifyListeners();
   }
 
@@ -32,18 +46,40 @@ class NotificationsProvider extends ChangeNotifier {
 
     try {
       final resp =
-          await MastodonHelper.api?.v1.notifications.lookupNotifications();
+          await MastodonHelper.api?.v1.notifications.lookupNotifications(limit: pageSize);
       if (resp != null) {
-        final notifications =
-            resp.data.map(NotificationEntity.fromModel).toList();
-        await notificationDao.insertNotifications(notifications);
-        await timelineDao.saveStatuses(resp.data
-            .where((e) => e.status != null)
-            .map((e) => e.status!)
-            .toList());
-        await timelineDao.insertAccounts(
-            resp.data.map((e) => AccountEntity.fromModel(e.account)).toList());
+        await timelineDao.saveNotifications(resp.data);
+        _notifications.clear();
+        await refresh();
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
 
+  loadNotificationsMore() async {
+    if (_loading) return;
+
+    _loading = true;
+    notifyListeners();
+
+    final count = await notificationDao.countNotifications();
+
+    if (count != null && count > _notifications.length) {
+      await appendNotifications();
+      await Future.delayed(const Duration(milliseconds: 100));
+      _loading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final notification = await notificationDao.getOldestNotification();
+      final resp = await MastodonHelper.api?.v1.notifications
+          .lookupNotifications(maxNotificationId: notification?.id, limit: pageSize);
+      if (resp != null) {
+        await timelineDao.saveNotifications(resp.data);
         await refresh();
       }
     } finally {

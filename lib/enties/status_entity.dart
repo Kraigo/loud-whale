@@ -3,6 +3,8 @@ import 'package:mastodon/enties/account_entity.dart';
 import 'package:mastodon/enties/attachment_entity.dart';
 import 'package:mastodon_api/mastodon_api.dart';
 
+import 'poll_entity.dart';
+
 @Entity(
   tableName: 'statuses',
   foreignKeys: [
@@ -48,6 +50,9 @@ class StatusEntity {
 
   @ignore
   List<AttachmentEntity>? mediaAttachments;
+  
+  @ignore
+  PollEntity? poll;
 
   StatusEntity({
     required this.id,

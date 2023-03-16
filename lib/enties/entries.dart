@@ -6,3 +6,4 @@ export 'notification_entity.dart';
 export 'relationship_entity.dart';
 export 'views/database_info.dart';
 export 'status_home_entity.dart';
+export 'poll_entity.dart';
