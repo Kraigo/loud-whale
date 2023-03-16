@@ -137,4 +137,27 @@ class TimelineProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> votePoll(String pollId, List<int> choices) async {
+    try {
+      await MastodonHelper.api?.v1.statuses
+          .createVotes(pollId: pollId, choices: choices);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> updateStatus(String statusId) async {
+    try {
+      final resp = await MastodonHelper.api?.v1.statuses
+          .lookupStatus(statusId: statusId);
+      if (resp != null) {
+        await timelineDao.saveStatuses([resp.data]);
+        await refresh();
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
 }
