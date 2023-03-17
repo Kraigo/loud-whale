@@ -25,7 +25,6 @@ class ReplyScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        backgroundColor: Colors.transparent,
       ),
       body: Center(
         child: Card(
@@ -48,10 +47,11 @@ class ReplyDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Constants.padding),
-        ),
-        child: ReplyView(status: status));
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Constants.padding),
+      ),
+      child: ReplyView(status: status),
+    );
   }
 }
 

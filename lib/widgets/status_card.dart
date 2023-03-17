@@ -12,9 +12,11 @@ class StatusCard extends StatelessWidget {
   final StatusEntity status;
   final bool showMedia;
   final EdgeInsets padding;
+  final bool? collapsed;
   const StatusCard(
     this.status, {
     this.showMedia = true,
+    this.collapsed,
     this.padding = const EdgeInsets.all(8.0),
     super.key,
   });
@@ -38,16 +40,17 @@ class StatusCard extends StatelessWidget {
           if (actualStatus.hasContent ?? false)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: StatusCardContent(actualStatus),
+              child: StatusCardContent(
+                actualStatus,
+                collapsed: collapsed,
+              ),
             ),
           if (actualStatus.mediaAttachments?.isNotEmpty ?? false)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: StatusMedia(actualStatus.mediaAttachments ?? []),
             ),
-
-          if (actualStatus.poll != null) 
-            StatusPoll(poll: actualStatus.poll!),
+          if (actualStatus.poll != null) StatusPoll(poll: actualStatus.poll!),
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: StatusCardActions(status),
@@ -138,7 +141,9 @@ class StatusCardAccount extends StatelessWidget {
 
 class StatusCardContent extends StatelessWidget {
   final StatusEntity status;
-  const StatusCardContent(this.status, {super.key});
+  final bool collapsed;
+  const StatusCardContent(this.status, {collapsed, super.key})
+      : collapsed = collapsed ?? false;
 
   _openLink(String url) async {
     await launchUrlString(url);
@@ -146,29 +151,37 @@ class StatusCardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const lineHeight = 1.4;
+    const fontSize = 14.0;
+    final lineSize = FontSize.medium.size! * lineHeight;
+    final maxHeight = collapsed ? lineSize * 15 : double.infinity;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Html(
-          style: {
-            'body': Style(
-                padding: const EdgeInsets.all(0),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Html(
+            style: {
+              'body': Style(
+                  padding: const EdgeInsets.all(0),
+                  margin: const EdgeInsets.all(0),
+                  lineHeight: LineHeight.em(lineHeight),
+                  fontSize: const FontSize(fontSize)),
+              'p': Style(
                 margin: const EdgeInsets.all(0),
-                lineHeight: LineHeight.em(1.4)),
-            'p': Style(
-              margin: const EdgeInsets.all(0),
-            ),
-            'a': Style(
-              textDecoration: TextDecoration.none
-            )
-          },
-          data: status.content,
-          onLinkTap: (url, context, attributes, element) {
-            debugPrint(url);
-            if (url != null) {
-              _openLink(url);
-            }
-          },
+              ),
+              'a': Style(
+                textDecoration: TextDecoration.none,
+              )
+            },
+            data: status.content,
+            onLinkTap: (url, context, attributes, element) {
+              debugPrint(url);
+              if (url != null) {
+                _openLink(url);
+              }
+            },
+          ),
         ),
       ],
     );

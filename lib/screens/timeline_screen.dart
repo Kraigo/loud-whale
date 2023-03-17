@@ -92,7 +92,7 @@ class _TimelineList extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = statuses[index];
 
-        return MiddleContainer(StatusCard(item));
+        return MiddleContainer(StatusCard(item, collapsed: true,));
       },
       separatorBuilder: ((context, index) => const MiddleContainer(Divider())),
       itemCount: statuses.length,

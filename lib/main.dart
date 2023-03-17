@@ -92,6 +92,7 @@ class MastodonApp extends StatelessWidget {
           // hintColor: AppTheme.purple.shade100,
           appBarTheme: const AppBarTheme(
             elevation: 0,
+            centerTitle: true
           )),
       onGenerateRoute: Routes.onGenerateRoute,
       home: const StartScreen(),
