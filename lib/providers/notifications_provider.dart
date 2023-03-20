@@ -9,6 +9,10 @@ class NotificationsProvider extends ChangeNotifier {
   bool get loading => _loading;
   List<NotificationEntity> _notifications = [];
   List<NotificationEntity> get notifications => _notifications;
+  int _unreadNotifications = 0;
+  int get unreadNotifications => _unreadNotifications;
+  DateTime _lastReadDate = DateTime.now();
+  DateTime get lastReadDate => _lastReadDate;
 
   NotificationDao notificationDao;
   TimelineDao timelineDao;
@@ -32,7 +36,8 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> appendNotifications() async {
     final limit = pageSize;
     final skip = _notifications.length;
-    final moreNotifications = await notificationDao.findNotifications(limit, skip);
+    final moreNotifications =
+        await notificationDao.findNotifications(limit, skip);
     for (var n in moreNotifications) {
       await timelineDao.populateNotification(n);
     }
@@ -45,8 +50,8 @@ class NotificationsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final resp =
-          await MastodonHelper.api?.v1.notifications.lookupNotifications(limit: pageSize);
+      final resp = await MastodonHelper.api?.v1.notifications
+          .lookupNotifications(limit: pageSize);
       if (resp != null) {
         await timelineDao.saveNotifications(resp.data);
         _notifications.clear();
@@ -77,7 +82,8 @@ class NotificationsProvider extends ChangeNotifier {
     try {
       final notification = await notificationDao.getOldestNotification();
       final resp = await MastodonHelper.api?.v1.notifications
-          .lookupNotifications(maxNotificationId: notification?.id, limit: pageSize);
+          .lookupNotifications(
+              maxNotificationId: notification?.id, limit: pageSize);
       if (resp != null) {
         await timelineDao.saveNotifications(resp.data);
         await refresh();
@@ -86,5 +92,57 @@ class NotificationsProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadUnreadNotifications() async {
+    await loadNotifications();
+    try {
+      final resp =
+          await MastodonHelper.api?.v1.timelines.lookupNotificationSnapshot();
+      if (resp != null) {
+        final lastReadId = resp.data.marker.lastReadId;
+        final notification = await notificationDao.findNotification(lastReadId);
+
+        if (notification != null) {
+          _lastReadDate = notification.createdAt;
+        }
+
+        _unreadNotifications = await notificationDao
+                .countUnreadNotifications(resp.data.marker.lastReadId) ??
+            0;
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> readNotifications() async {
+    if (_loading) return;
+
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final notification = await notificationDao.getNewestNotification();
+
+      if (notification != null) {
+        if (notification.createdAt.isAfter(_lastReadDate)) {
+          final resp = await MastodonHelper.api?.v1.timelines
+              .createNotificationSnapshot(notificationId: notification.id);
+
+          if (resp != null) {
+            _unreadNotifications = 0;
+            _lastReadDate = notification.createdAt;
+          }
+        }
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  bool isUnread(NotificationEntity notification) {
+    return notification.createdAt.isAfter(_lastReadDate);
   }
 }

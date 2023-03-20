@@ -24,9 +24,12 @@ class HomeProvider extends ChangeNotifier {
     HomeMenu.profile,
     HomeMenu.preferences
   ];
+
   int _selectedIndex = 0;
   int get selectedIndex => _selectedIndex;
   HomeMenu get selectedMenu => menuList[_selectedIndex];
+
+  Map<HomeMenu, int> badges = {};
 
   selectMenu(HomeMenu menu) {
     _selectedIndex = menuList.indexOf(menu);
@@ -36,5 +39,17 @@ class HomeProvider extends ChangeNotifier {
   selectIndex(int index) {
     _selectedIndex = index;
     notifyListeners();
+  }
+
+  updateBadge(HomeMenu menu, int value) {
+    badges.addAll({menu: value});
+    notifyListeners();
+  }
+
+  int badgeValue(HomeMenu menu) {
+    if (badges.containsKey(menu)) {
+      return badges[menu] ?? 0;
+    }
+    return 0;
   }
 }

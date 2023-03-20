@@ -6,7 +6,6 @@ import 'package:mastodon/base/theme.dart';
 import 'package:mastodon/enties/entries.dart';
 
 import 'account_avatar.dart';
-import 'middle_container.dart';
 import 'status_card.dart';
 
 class NotificationCard extends StatelessWidget {
@@ -14,57 +13,82 @@ class NotificationCard extends StatelessWidget {
   final Color iconColor;
   final NotificationEntity notification;
   final bool truncatedStatus;
+  final bool isUnread;
 
-  factory NotificationCard(NotificationEntity notification) {
+  factory NotificationCard(NotificationEntity notification,
+      {isUnread = false}) {
     switch (notification.type) {
       case 'mention':
-        return NotificationCard.mention(notification);
+        return NotificationCard.mention(notification, isUnread: isUnread);
       case 'reblog':
-        return NotificationCard.reblog(notification);
+        return NotificationCard.reblog(notification, isUnread: isUnread);
       case 'follow':
-        return NotificationCard.follow(notification);
+        return NotificationCard.follow(notification, isUnread: isUnread);
       case 'follow_request':
-        return NotificationCard.follow(notification);
+        return NotificationCard.follow(notification, isUnread: isUnread);
       case 'favourite':
-        return NotificationCard.favourite(notification);
+        return NotificationCard.favourite(notification, isUnread: isUnread);
       default:
-        return NotificationCard.regular(notification);
+        return NotificationCard.regular(notification, isUnread: isUnread);
     }
   }
 
-  const NotificationCard.regular(this.notification, {super.key})
-      : icon = Icons.notifications,
+  const NotificationCard.regular(
+    this.notification, {
+    this.isUnread = false,
+    super.key,
+  })  : icon = Icons.notifications,
         iconColor = AppTheme.followColor,
         truncatedStatus = true;
 
-  const NotificationCard.favourite(this.notification, {super.key})
-      : icon = Icons.star,
+  const NotificationCard.favourite(
+    this.notification, {
+    this.isUnread = false,
+    super.key,
+  })  : icon = Icons.star,
         iconColor = AppTheme.favouriteColor,
         truncatedStatus = true;
 
-  const NotificationCard.reblog(this.notification, {super.key})
-      : icon = Icons.repeat,
+  const NotificationCard.reblog(
+    this.notification, {
+    this.isUnread = false,
+    super.key,
+  })  : icon = Icons.repeat,
         iconColor = AppTheme.reblogColor,
         truncatedStatus = true;
 
-  const NotificationCard.follow(this.notification, {super.key})
-      : icon = Icons.person,
+  const NotificationCard.follow(
+    this.notification, {
+    this.isUnread = false,
+    super.key,
+  })  : icon = Icons.person,
         iconColor = AppTheme.followColor,
         truncatedStatus = true;
 
-  const NotificationCard.mention(this.notification, {super.key})
-      : icon = Icons.reply,
+  const NotificationCard.mention(
+    this.notification, {
+    this.isUnread = false,
+    super.key,
+  })  : icon = Icons.reply,
         iconColor = AppTheme.followColor,
         truncatedStatus = false;
 
   @override
   Widget build(BuildContext context) {
-    return MiddleContainer(Row(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          color: iconColor,
+        Column(
+          children: [
+            Icon(
+              icon,
+              color: iconColor,
+            ),
+            if (isUnread)
+              const Icon(
+                Icons.fiber_new_outlined,
+              ),
+          ],
         ),
         const SizedBox(
           width: 10,
@@ -96,7 +120,7 @@ class NotificationCard extends StatelessWidget {
                 ),
         ),
       ],
-    ));
+    );
   }
 }
 

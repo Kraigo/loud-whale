@@ -5,6 +5,12 @@ import 'package:mastodon/enties/notification_entity.dart';
 abstract class NotificationDao {
   @Query('''
     SELECT * FROM notifications
+    WHERE id = :id
+  ''')
+  Future<NotificationEntity?> findNotification(String id);
+
+  @Query('''
+    SELECT * FROM notifications
     ORDER BY createdAt DESC
     LIMIT :limit
     OFFSET :skip
@@ -33,4 +39,21 @@ abstract class NotificationDao {
     LIMIT 1
   ''')
   Future<NotificationEntity?> getOldestNotification();
+
+  @Query('''
+    SELECT * FROM notifications
+    ORDER BY createdAt DESC
+    LIMIT 1
+  ''')
+  Future<NotificationEntity?> getNewestNotification();
+
+  @Query('''
+    SELECT COUNT(id) FROM "notifications"
+    WHERE createdAt > (
+      SELECT createdAt FROM "notifications"
+      WHERE id = :notificationId
+      LIMIT 1
+    )
+  ''')
+  Future<int?> countUnreadNotifications(String notificationId);
 }

@@ -25,6 +25,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (maxScroll - currentScroll <= delta) {
         _onLoadMore();
       }
+
+      if (currentScroll <= 0) {
+        _onReadAll();
+      }
     });
     super.initState();
   }
@@ -39,6 +43,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final notificationsProvider = context.read<NotificationsProvider>();
     notificationsProvider.loadNotificationsMore();
   }
+  _onReadAll() async {
+    final notificationsProvider = context.read<NotificationsProvider>();
+    await notificationsProvider.readNotifications();
+  }
 
   _loadInitial() async {
     final notificationsProvider = context.read<NotificationsProvider>();
@@ -48,7 +56,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final notifications = context.watch<NotificationsProvider>().notifications;
+    final notificationsProvider = context.watch<NotificationsProvider>();
+    final notifications = notificationsProvider.notifications;
 
     return Scaffold(
         appBar: AppBar(
@@ -63,9 +72,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           itemCount: notifications.length,
           itemBuilder: (context, index) {
             final item = notifications[index];
+            final isUnread = notificationsProvider.isUnread(item);
             return Padding(
               padding: const EdgeInsets.all(8.0),
-              child: NotificationCard(item),
+              child: MiddleContainer(NotificationCard(
+                item,
+                isUnread: isUnread,
+              )),
             );
           },
           separatorBuilder: (context, index) =>

@@ -1299,6 +1299,18 @@ class _$TimelineDao extends TimelineDao {
   }
 
   @override
+  Future<NotificationEntity?> findNotification(String id) async {
+    return _queryAdapter.query('SELECT * FROM notifications     WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?),
+        arguments: [id]);
+  }
+
+  @override
   Future<List<NotificationEntity>> findNotifications(
     int limit,
     int skip,
@@ -1330,6 +1342,26 @@ class _$TimelineDao extends TimelineDao {
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
             statusId: row['statusId'] as String?));
+  }
+
+  @override
+  Future<NotificationEntity?> getNewestNotification() async {
+    return _queryAdapter.query(
+        'SELECT * FROM notifications     ORDER BY createdAt DESC     LIMIT 1',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?));
+  }
+
+  @override
+  Future<int?> countUnreadNotifications(String notificationId) async {
+    return _queryAdapter.query(
+        'SELECT COUNT(id) FROM \"notifications\"     WHERE createdAt > (       SELECT createdAt FROM \"notifications\"       WHERE id = ?1       LIMIT 1     )',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [notificationId]);
   }
 
   @override
@@ -1496,6 +1528,18 @@ class _$NotificationDao extends NotificationDao {
       _notificationEntityInsertionAdapter;
 
   @override
+  Future<NotificationEntity?> findNotification(String id) async {
+    return _queryAdapter.query('SELECT * FROM notifications     WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?),
+        arguments: [id]);
+  }
+
+  @override
   Future<List<NotificationEntity>> findNotifications(
     int limit,
     int skip,
@@ -1527,6 +1571,26 @@ class _$NotificationDao extends NotificationDao {
             createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
             accountId: row['accountId'] as String,
             statusId: row['statusId'] as String?));
+  }
+
+  @override
+  Future<NotificationEntity?> getNewestNotification() async {
+    return _queryAdapter.query(
+        'SELECT * FROM notifications     ORDER BY createdAt DESC     LIMIT 1',
+        mapper: (Map<String, Object?> row) => NotificationEntity(
+            id: row['id'] as String,
+            type: row['type'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            accountId: row['accountId'] as String,
+            statusId: row['statusId'] as String?));
+  }
+
+  @override
+  Future<int?> countUnreadNotifications(String notificationId) async {
+    return _queryAdapter.query(
+        'SELECT COUNT(id) FROM \"notifications\"     WHERE createdAt > (       SELECT createdAt FROM \"notifications\"       WHERE id = ?1       LIMIT 1     )',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [notificationId]);
   }
 
   @override

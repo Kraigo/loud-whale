@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/providers/home_provider.dart';
+import 'package:mastodon/providers/notifications_provider.dart';
 import 'package:mastodon/screens/compose_screen.dart';
 import 'package:mastodon/screens/my_profile_screen.dart';
 import 'package:mastodon/screens/notifications_screen.dart';
@@ -23,13 +24,35 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _Sidebar extends StatelessWidget {
+class _Sidebar extends StatefulWidget {
   const _Sidebar();
 
+  @override
+  State<_Sidebar> createState() => _SidebarState();
+}
+
+class _SidebarState extends State<_Sidebar> {
   _onCompose(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ComposeScreen()),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadInitial);
+  }
+
+  _loadInitial() async {
+    final notificationsProvider = context.read<NotificationsProvider>();
+    final homeProvider = context.read<HomeProvider>();
+    await notificationsProvider.loadUnreadNotifications();
+
+    homeProvider.updateBadge(
+      HomeMenu.notifications,
+      notificationsProvider.unreadNotifications,
     );
   }
 
@@ -40,19 +63,30 @@ class _Sidebar extends StatelessWidget {
     return NavigationRail(
       extended: false,
       trailing: FloatingActionButton(
-        onPressed: () {_onCompose(context);},
+        onPressed: () {
+          _onCompose(context);
+        },
         elevation: 0,
         child: const Icon(Icons.edit),
       ),
       groupAlignment: -1,
       destinations: [
-        ...homeProvider.menuList.map(
-          (e) => NavigationRailDestination(
-            icon: Icon(e.icon),
-            selectedIcon: Icon(e.selectedIcon),
+        ...homeProvider.menuList.map((e) {
+          final badgeValue = homeProvider.badgeValue(e);
+          return NavigationRailDestination(
+            icon: Badge(
+              isLabelVisible: badgeValue > 0,
+              label: Text('$badgeValue'),
+              child: Icon(e.icon),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: badgeValue > 0,
+              label: Text('$badgeValue'),
+              child: Icon(e.selectedIcon),
+            ),
             label: Text(e.label),
-          ),
-        )
+          );
+        })
       ],
       onDestinationSelected: (value) {
         homeProvider.selectIndex(value);
