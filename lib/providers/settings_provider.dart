@@ -17,6 +17,15 @@ class SettingsProvider extends ChangeNotifier {
     return null;
   }
 
+  Future<void> updateSettingValue(StorageKeys key, String value) async {
+    final setting = SettingEntity(
+      name: key.storageKey,
+      value: value,
+    );
+    await settingDao.insertSetting(setting);
+    await refresh();
+  }
+
   int get statusMaxLength {
     return int.parse(getSettingValue(StorageKeys.statusesMaxCharacter) ?? '0');
   }
@@ -56,5 +65,10 @@ class SettingsProvider extends ChangeNotifier {
         await refresh();
       }
     } catch (_) {}
+  }
+
+  bool get isDarkEnabled {
+    return getSettingValue(StorageKeys.accessabilityDarkMode)?.isNotEmpty ??
+        false;
   }
 }

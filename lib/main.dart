@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mastodon/base/store_key.dart';
 import 'package:mastodon/providers/authorization_provider.dart';
 import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
@@ -81,19 +82,24 @@ class MastodonApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkEnabled = context
+            .watch<SettingsProvider>()
+            .getSettingValue(StorageKeys.accessabilityDarkMode)
+            ?.isNotEmpty ??
+        false;
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-          useMaterial3: true,
-          colorSchemeSeed: const Color(0x003088d4),
-          // colorScheme: ColorScheme.fromSwatch(primarySwatch: AppTheme.purple),
-          // scaffoldBackgroundColor: Colors.white,
-          // dividerColor: AppTheme.purple.shade100,
-          // hintColor: AppTheme.purple.shade100,
-          appBarTheme: const AppBarTheme(
-            elevation: 0,
-            centerTitle: true
-          )),
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0x003088d4),
+        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorSwatch(const Color(0x003088d4)),
+        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
+      ),
+      themeMode: isDarkEnabled ? ThemeMode.dark : ThemeMode.light,
       onGenerateRoute: Routes.onGenerateRoute,
       home: const StartScreen(),
     );

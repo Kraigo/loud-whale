@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mastodon/base/database.dart';
 import 'package:mastodon/base/routes.dart';
+import 'package:mastodon/base/store_key.dart';
 import 'package:mastodon/helpers/format_bytes.dart';
+import 'package:mastodon/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class PreferencesScreen extends StatefulWidget {
@@ -75,12 +77,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   : const Icon(Icons.cleaning_services),
               onTap: _onCleanCache,
             ),
+            const _DarkThemeOption(),
             ListTile(
               tileColor: Theme.of(context).cardColor,
               title: const Text("Logout"),
               leading: const Icon(Icons.logout),
               onTap: _onLogout,
-            )
+            ),
           ],
         ),
       ),
@@ -99,5 +102,32 @@ class LoadingIcon extends StatelessWidget {
         child: CircularProgressIndicator(
           strokeWidth: 2,
         ));
+  }
+}
+
+class _DarkThemeOption extends StatelessWidget {
+  final storageKey = StorageKeys.accessabilityDarkMode;
+
+  const _DarkThemeOption({super.key});
+
+  _onToggleTheme(BuildContext context) async {
+    final settingsProvider = context.read<SettingsProvider>();
+    await settingsProvider.updateSettingValue(
+        storageKey, settingsProvider.isDarkEnabled ? '' : 'dark');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
+    return ListTile(
+      tileColor: Theme.of(context).cardColor,
+      title: settingsProvider.isDarkEnabled
+          ? const Text("Enable Light theme")
+          : const Text("Enable Dark theme"),
+      leading: settingsProvider.isDarkEnabled
+          ? const Icon(Icons.sunny)
+          : const Icon(Icons.mode_night_outlined),
+      onTap: () => _onToggleTheme(context),
+    );
   }
 }
