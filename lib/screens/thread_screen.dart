@@ -66,7 +66,7 @@ class _ThreadScreenState extends State<ThreadScreen> {
                         borderRadius:
                             BorderRadius.circular(Constants.cardBorderRadius)),
                     child: MiddleContainer(threadProvider.threadStatus != null
-                        ? StatusCard(threadProvider.threadStatus!)
+                        ? StatusCard(threadProvider.threadStatus!, disabledThread: true)
                         : const StatusCardPlaceholder()),
                   ),
                 )),

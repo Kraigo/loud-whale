@@ -13,10 +13,12 @@ class StatusCard extends StatelessWidget {
   final bool showMedia;
   final EdgeInsets padding;
   final bool? collapsed;
+  final bool disabledThread;
   const StatusCard(
     this.status, {
     this.showMedia = true,
     this.collapsed,
+    this.disabledThread = false,
     this.padding = const EdgeInsets.all(8.0),
     super.key,
   });
@@ -31,7 +33,7 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => {_openThread(context)},
+      onTap: disabledThread ? null : () => _openThread(context),
       child: Padding(
         padding: padding,
         child: Column(children: [
@@ -139,50 +141,88 @@ class StatusCardAccount extends StatelessWidget {
   }
 }
 
-class StatusCardContent extends StatelessWidget {
+class StatusCardContent extends StatefulWidget {
   final StatusEntity status;
   final bool collapsed;
+
   const StatusCardContent(this.status, {collapsed, super.key})
       : collapsed = collapsed ?? false;
+
+  @override
+  State<StatusCardContent> createState() => _StatusCardContentState();
+}
+
+class _StatusCardContentState extends State<StatusCardContent> {
+  late ScrollController scrollController;
+  bool showMore = false;
 
   _openLink(String url) async {
     await launchUrlString(url);
   }
 
   @override
+  void initState() {
+    scrollController = ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        showMore = scrollController.position.maxScrollExtent > 0;
+      });
+    });
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    const maxLines = 12;
     const lineHeight = 1.4;
     const fontSize = 14.0;
     final lineSize = FontSize.medium.size! * lineHeight;
-    final maxHeight = collapsed ? lineSize * 15 : double.infinity;
+    final maxHeight = widget.collapsed ? lineSize * maxLines : double.infinity;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
-          child: Html(
-            style: {
-              'body': Style(
-                  padding: const EdgeInsets.all(0),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Html(
+              style: {
+                'body': Style(
+                    padding: const EdgeInsets.all(0),
+                    margin: const EdgeInsets.all(0),
+                    lineHeight: LineHeight.em(lineHeight),
+                    fontSize: const FontSize(fontSize)),
+                'p': Style(
                   margin: const EdgeInsets.all(0),
-                  lineHeight: LineHeight.em(lineHeight),
-                  fontSize: const FontSize(fontSize)),
-              'p': Style(
-                margin: const EdgeInsets.all(0),
-              ),
-              'a': Style(
-                textDecoration: TextDecoration.none,
-              )
-            },
-            data: status.content,
-            onLinkTap: (url, context, attributes, element) {
-              debugPrint(url);
-              if (url != null) {
-                _openLink(url);
-              }
-            },
+                ),
+                'a': Style(
+                  textDecoration: TextDecoration.none,
+                )
+              },
+              data: widget.status.content,
+              onLinkTap: (url, context, attributes, element) {
+                debugPrint(url);
+                if (url != null) {
+                  _openLink(url);
+                }
+              },
+            ),
           ),
         ),
+        if (showMore)
+          AbsorbPointer(
+            child: TextButton(child: const Text('Show More'), onPressed: () {}),
+          )
       ],
     );
   }
