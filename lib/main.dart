@@ -96,7 +96,7 @@ class MastodonApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
       ),
       darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorSwatch(const Color(0x003088d4)),
+        // colorScheme: ColorSwatch(const Color(0x003088d4)),
         appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
       ),
       themeMode: isDarkEnabled ? ThemeMode.dark : ThemeMode.light,
