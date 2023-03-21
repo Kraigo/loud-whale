@@ -63,7 +63,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         appBar: AppBar(
           title: const Text('Notifications'),
           bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(3.0),
+            preferredSize: Size.fromHeight(1.0),
             child: _NotificationsLoading(),
           ),
         ),
@@ -94,7 +94,7 @@ class _NotificationsLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final notificationsProvider = context.watch<NotificationsProvider>();
     if (notificationsProvider.loading) {
-      return const LinearProgressIndicator();
+      return const SizedBox(height: 1, child: LinearProgressIndicator());
     }
     return Container();
   }

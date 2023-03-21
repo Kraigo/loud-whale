@@ -26,7 +26,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         appBar: AppBar(
           title: const Text("Compose"),
           bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(3.0),
+            preferredSize: Size.fromHeight(1.0),
             child: _ComposeLoading(),
           ),
         ),
@@ -157,7 +157,7 @@ class _ComposeLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final composeProvider = context.watch<ComposeProvider>();
     if (composeProvider.loading) {
-      return const LinearProgressIndicator();
+      return const SizedBox(height: 1, child: LinearProgressIndicator());
     }
     return Container();
   }

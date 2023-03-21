@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/providers/thread_provider.dart';
@@ -165,10 +164,6 @@ class _StatusCardContentState extends State<StatusCardContent> {
   late ScrollController scrollController;
   bool showMore = false;
 
-  _openLink(String url) async {
-    await launchUrlString(url);
-  }
-
   @override
   void initState() {
     scrollController = ScrollController();
@@ -191,49 +186,50 @@ class _StatusCardContentState extends State<StatusCardContent> {
 
   @override
   Widget build(BuildContext context) {
-    const maxLines = 12;
-    const lineHeight = 1.4;
-    const fontSize = 14.0;
-    final lineSize = FontSize.medium.size! * lineHeight;
-    final maxHeight = widget.collapsed ? lineSize * maxLines : double.infinity;
+    final maxHeight = widget.collapsed ? 300.0 : double.infinity;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: SingleChildScrollView(
             controller: scrollController,
             physics: const NeverScrollableScrollPhysics(),
-            child: Html(
-              style: {
-                'body': Style(
-                    padding: const EdgeInsets.all(0),
-                    margin: const EdgeInsets.all(0),
-                    lineHeight: LineHeight.em(lineHeight),
-                    fontSize: const FontSize(fontSize)),
-                'p': Style(
-                  margin: const EdgeInsets.all(0),
-                ),
-                'a': Style(
-                  textDecoration: TextDecoration.none,
-                )
-              },
+            child: StatusHTML(
               data: widget.status.content,
-              onLinkTap: (url, context, attributes, element) {
-                debugPrint(url);
-                if (url != null) {
-                  _openLink(url);
-                }
-              },
             ),
           ),
         ),
         if (showMore)
-          AbsorbPointer(
-            child: TextButton(child: const Text('Show More'), onPressed: () {}),
+          const Positioned(
+            height: 30,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _MoreGradient(),
           )
       ],
+    );
+  }
+}
+
+class _MoreGradient extends StatelessWidget {
+  const _MoreGradient({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Theme.of(context).cardColor.withOpacity(0.5),
+          Theme.of(context).cardColor,
+        ],
+      )),
     );
   }
 }

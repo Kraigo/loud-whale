@@ -14,7 +14,7 @@ class AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = 100.0;
+    const avatarSize = 100.0;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -60,21 +60,8 @@ class AccountCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Html(
+                StatusHTML(
                   data: account.note,
-                  style: {
-                    'body': Style(
-                      padding: const EdgeInsets.all(0),
-                      margin: const EdgeInsets.all(0),
-                    ),
-                    'p': Style(
-                      
-                      margin: const EdgeInsets.all(0),
-                    ),
-                    'a': Style(
-                      textDecoration: TextDecoration.none,
-                    )
-                  },
                 ),
                 const Divider(),
                 StatusesCount(account),

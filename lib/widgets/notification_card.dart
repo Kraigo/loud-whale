@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/base/theme.dart';
@@ -7,6 +6,7 @@ import 'package:mastodon/enties/entries.dart';
 
 import 'account_avatar.dart';
 import 'status_card.dart';
+import 'status_html.dart';
 
 class NotificationCard extends StatelessWidget {
   final IconData icon;
@@ -210,21 +210,7 @@ class _NotificationStatus extends StatelessWidget {
         Navigator.of(context)
             .pushNamed(Routes.thread, arguments: {'statusId': status.id});
       },
-      child: Html(
-        style: {
-          'a': Style(
-            color: Theme.of(context).disabledColor,
-            textDecoration: TextDecoration.none,
-          ),
-          'body': Style(
-            padding: const EdgeInsets.all(0),
-            margin: const EdgeInsets.all(0),
-            color: Theme.of(context).disabledColor,
-          ),
-          'p': Style(margin: EdgeInsets.zero),
-        },
-        data: status.content,
-      ),
+      child: StatusHTML(data: status.content),
     );
   }
 }

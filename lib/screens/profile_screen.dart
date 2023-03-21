@@ -35,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         appBar: AppBar(
           title: const Text('Profile'),
           bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(3.0),
+            preferredSize: Size.fromHeight(1.0),
             child: _ProfileLoading(),
           ),
         ),
@@ -98,7 +98,7 @@ class _ProfileLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
     if (profileProvider.loading) {
-      return const LinearProgressIndicator();
+      return const SizedBox(height: 1, child: LinearProgressIndicator());
     }
     return Container();
   }

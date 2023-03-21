@@ -68,7 +68,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
       appBar: AppBar(
         title: const Text("Timeline"),
         bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(3.0),
+          preferredSize: Size.fromHeight(1.0),
           child: _TimelineLoading(),
         ),
       ),
@@ -112,7 +112,7 @@ class _TimelineLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final timelineProvider = context.watch<TimelineProvider>();
     if (timelineProvider.loading) {
-      return const LinearProgressIndicator();
+      return const SizedBox(height: 1, child: LinearProgressIndicator());
     }
     return Container();
   }
