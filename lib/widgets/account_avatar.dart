@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 class AccountAvatar extends StatelessWidget {
   final String? avatar;
-  const AccountAvatar({required this.avatar, super.key});
+  final double size;
+  const AccountAvatar({required this.avatar, this.size = 40, super.key});
 
   @override
   Widget build(BuildContext context) {
     return AccountAvatarPlaceholder(
-      size: 40,
+      size: size,
       child: avatar != null ? Image.network(avatar!) : null,
     );
   }

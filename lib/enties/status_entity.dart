@@ -30,6 +30,9 @@ class StatusEntity {
   int reblogsCount;
   String? language;
   String? inReplyToId;
+  
+  @ignore
+  AccountEntity? inReplyToAccount;
   String? inReplyToAccountId;
   bool? isFavourited;
   bool? isReblogged;

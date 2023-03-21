@@ -112,6 +112,9 @@ abstract class TimelineDao
       status.reblog = await findStatusById(status.reblogId!);
       await populateStatus(status.reblog);
     }
+    if (status.inReplyToAccountId != null) {
+      status.inReplyToAccount = await findAccountById(status.inReplyToAccountId!);
+    }
     return status;
   }
 }

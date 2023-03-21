@@ -30,11 +30,13 @@ class TimelineProvider extends ChangeNotifier {
   Future<void> refresh() async {
     final limit = _statuses.isNotEmpty ? _statuses.length : pageSize;
     const skip = 0;
-    _statuses = await statusDao.findAllHomeStatuses(limit, skip);
-    for (var s in _statuses) {
+    final statuses = await statusDao.findAllHomeStatuses(limit, skip);
+    for (var s in statuses) {
       await timelineDao.populateStatus(s);
     }
-    sortStatusesByReply(_statuses, offset: const Duration(minutes: 10));
+    _statuses = statuses;
+    // sortStatusesByReply(_statuses, offset: const Duration(minutes: 10));
+
     notifyListeners();
   }
 
@@ -91,7 +93,6 @@ class TimelineProvider extends ChangeNotifier {
       if (resp != null) {
         await timelineDao.saveStatuses(resp.data);
         await timelineDao.saveHomeStatuses(resp.data);
-        await refresh();
       }
     } finally {
       _loading = false;
@@ -105,7 +106,6 @@ class TimelineProvider extends ChangeNotifier {
           .destroyFavourite(statusId: statusId);
       if (resp != null) {
         await timelineDao.saveStatuses([resp.data]);
-        await refresh();
       }
     } finally {
       notifyListeners();
@@ -118,7 +118,6 @@ class TimelineProvider extends ChangeNotifier {
           .createFavourite(statusId: statusId);
       if (resp != null) {
         await timelineDao.saveStatuses([resp.data]);
-        await refresh();
       }
     } finally {
       notifyListeners();
@@ -131,7 +130,6 @@ class TimelineProvider extends ChangeNotifier {
           .createReblog(statusId: statusId);
       if (resp != null) {
         await timelineDao.saveStatuses([resp.data]);
-        await refresh();
       }
     } finally {
       notifyListeners();
@@ -154,7 +152,6 @@ class TimelineProvider extends ChangeNotifier {
           .lookupStatus(statusId: statusId);
       if (resp != null) {
         await timelineDao.saveStatuses([resp.data]);
-        await refresh();
       }
     } finally {
       notifyListeners();

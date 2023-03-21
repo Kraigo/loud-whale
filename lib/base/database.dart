@@ -45,4 +45,6 @@ abstract class AppDatabase extends FloorDatabase {
   TimelineDao get timelineDao;
   NotificationDao get notificationDao;
   RelationshipDao get relationshipDao;
+
+  Stream<String> get changes => changeListener.stream;
 }

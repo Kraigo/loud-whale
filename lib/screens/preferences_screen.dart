@@ -121,12 +121,13 @@ class _DarkThemeOption extends StatelessWidget {
     final settingsProvider = context.watch<SettingsProvider>();
     return ListTile(
       tileColor: Theme.of(context).cardColor,
-      title: settingsProvider.isDarkEnabled
-          ? const Text("Enable Light theme")
-          : const Text("Enable Dark theme"),
+      title: Text("Toggle Theme"),
+      subtitle: settingsProvider.isDarkEnabled
+          ? const Text("Dark theme enabled")
+          : const Text("Light theme enabled"),
       leading: settingsProvider.isDarkEnabled
-          ? const Icon(Icons.sunny)
-          : const Icon(Icons.mode_night_outlined),
+          ? const Icon(Icons.mode_night_outlined)
+          : const Icon(Icons.sunny),
       onTap: () => _onToggleTheme(context),
     );
   }

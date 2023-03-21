@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:mastodon/base/routes.dart';
 import 'package:mastodon/enties/entries.dart';
+import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
 import 'package:mastodon/screens/reply_screen.dart';
 import 'package:mastodon/widgets/widgets.dart';
@@ -14,11 +15,13 @@ class StatusCard extends StatelessWidget {
   final EdgeInsets padding;
   final bool? collapsed;
   final bool disabledThread;
+  final bool showActionHeader;
   const StatusCard(
     this.status, {
     this.showMedia = true,
     this.collapsed,
     this.disabledThread = false,
+    this.showActionHeader = false,
     this.padding = const EdgeInsets.all(8.0),
     super.key,
   });
@@ -26,8 +29,10 @@ class StatusCard extends StatelessWidget {
   StatusEntity get actualStatus => status.reblog ?? status;
 
   _openThread(BuildContext context) async {
+    final statusId = actualStatus.id;
+    await context.read<ThreadProvider>().refresh(statusId);
     await Navigator.of(context)
-        .pushNamed(Routes.thread, arguments: {'statusId': actualStatus.id});
+        .pushNamed(Routes.thread, arguments: {'statusId': statusId});
   }
 
   @override
@@ -37,7 +42,11 @@ class StatusCard extends StatelessWidget {
       child: Padding(
         padding: padding,
         child: Column(children: [
-          if (status.reblog != null) StatusCardReblogged(status.account!),
+          if (showActionHeader) ...[
+            if (status.reblog != null) StatusCardReblogged(status.account!),
+            if (status.inReplyToAccount != null)
+              StatusCardReplied(status.inReplyToAccount!),
+          ],
           StatusCardHeader(status),
           if (actualStatus.hasContent ?? false)
             Padding(
@@ -55,7 +64,7 @@ class StatusCard extends StatelessWidget {
           if (actualStatus.poll != null) StatusPoll(poll: actualStatus.poll!),
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: StatusCardActions(status),
+            child: StatusCardActions(actualStatus),
           )
         ]),
       ),
@@ -165,6 +174,7 @@ class _StatusCardContentState extends State<StatusCardContent> {
     scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       setState(() {
         showMore = scrollController.position.maxScrollExtent > 0;
       });
@@ -300,32 +310,82 @@ class StatusCardReblogged extends StatelessWidget {
   final AccountEntity account;
   const StatusCardReblogged(this.account, {super.key});
 
+  _openProfile(BuildContext context) async {
+    await Navigator.of(context)
+        .pushNamed(Routes.profile, arguments: {'accountId': account.id});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-      child: DefaultTextStyle(
-          style: Theme.of(context)
-              .textTheme
-              .caption!
-              .copyWith(fontWeight: FontWeight.bold),
-          child: Row(
-            children: [
-              Icon(
-                Icons.repeat,
-                size: 14,
-                color: Theme.of(context).hintColor,
-              ),
-              const SizedBox(
-                width: 4,
-              ),
-              Text(account.displayName),
-              const SizedBox(
-                width: 4,
-              ),
-              const Text("boosted")
-            ],
-          )),
+    return GestureDetector(
+      onTap: () => _openProfile(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+        child: DefaultTextStyle(
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.repeat,
+                  size: 14,
+                  color: Theme.of(context).hintColor,
+                ),
+                const SizedBox(
+                  width: 4,
+                ),
+                Text(account.displayName),
+                const SizedBox(
+                  width: 4,
+                ),
+                const Text("boosted")
+              ],
+            )),
+      ),
+    );
+  }
+}
+
+class StatusCardReplied extends StatelessWidget {
+  final AccountEntity account;
+  const StatusCardReplied(this.account, {super.key});
+
+  _openProfile(BuildContext context) async {
+    await Navigator.of(context)
+        .pushNamed(Routes.profile, arguments: {'accountId': account.id});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openProfile(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+        child: DefaultTextStyle(
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.reply,
+                  size: 14,
+                  color: Theme.of(context).hintColor,
+                ),
+                const SizedBox(
+                  width: 4,
+                ),
+                const Text("Replied to"),
+                const SizedBox(
+                  width: 4,
+                ),
+                Text(account.displayName),
+              ],
+            )),
+      ),
     );
   }
 }

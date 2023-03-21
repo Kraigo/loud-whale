@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -15,12 +16,13 @@ class TimelineScreen extends StatefulWidget {
 
 class _TimelineScreenState extends State<TimelineScreen> {
   late ScrollController _scrollController;
-  late Timer _refreshTimer;
+  late StreamSubscription _updateSubscription;
 
   @override
   void initState() {
     Future.microtask(_loadInitial);
     _scrollController = ScrollController();
+    final timelineProvider = context.read<TimelineProvider>();
 
     _scrollController.addListener(() {
       final maxScroll = _scrollController.position.maxScrollExtent;
@@ -31,18 +33,17 @@ class _TimelineScreenState extends State<TimelineScreen> {
       }
     });
 
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      final timelineProvider = context.read<TimelineProvider>();
+    _updateSubscription = context.read<AppDatabase>().changes.listen((event) {
       timelineProvider.refresh();
     });
-    
+
     super.initState();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _refreshTimer.cancel();
+    _updateSubscription.cancel();
     super.dispose();
   }
 
@@ -92,7 +93,11 @@ class _TimelineList extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = statuses[index];
 
-        return MiddleContainer(StatusCard(item, collapsed: true,));
+        return MiddleContainer(StatusCard(
+          item,
+          collapsed: true,
+          showActionHeader: true,
+        ));
       },
       separatorBuilder: ((context, index) => const MiddleContainer(Divider())),
       itemCount: statuses.length,

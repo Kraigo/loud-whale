@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mastodon/base/constants.dart';
+import 'package:mastodon/base/database.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -14,24 +17,47 @@ class ThreadScreen extends StatefulWidget {
 
 class _ThreadScreenState extends State<ThreadScreen> {
   late GlobalKey originalStatusKey;
+  late StreamSubscription _updateSubscription;
 
   @override
   void initState() {
     originalStatusKey = GlobalKey();
-    Future.microtask(_loadInitial);
+    final threadProvider = context.read<ThreadProvider>();
+
+    Future.delayed(const Duration(milliseconds: 500))
+        .then((_) => _loadInitial());
+
+    _updateSubscription = context.read<AppDatabase>().changes.listen((event) {
+      threadProvider.refresh(widget.statusId);
+    });
     super.initState();
+  }
+
+  @override
+  void deactivate() {
+    final threadProvider = context.read<ThreadProvider>();
+    threadProvider.clear();
+    super.deactivate();
   }
 
   _loadInitial() async {
     final threadProvider = context.read<ThreadProvider>();
-    await threadProvider.refresh(widget.statusId);
-    await threadProvider.loadStatus(widget.statusId);
-    await threadProvider.loadThread(widget.statusId);
+    await Future.any([
+      threadProvider.loadStatus(widget.statusId),
+      threadProvider.loadThread(widget.statusId)
+    ]);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (originalStatusKey.currentContext != null) {
         Scrollable.ensureVisible(originalStatusKey.currentContext!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _updateSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -66,7 +92,8 @@ class _ThreadScreenState extends State<ThreadScreen> {
                         borderRadius:
                             BorderRadius.circular(Constants.cardBorderRadius)),
                     child: MiddleContainer(threadProvider.threadStatus != null
-                        ? StatusCard(threadProvider.threadStatus!, disabledThread: true)
+                        ? StatusCard(threadProvider.threadStatus!,
+                            disabledThread: true)
                         : const StatusCardPlaceholder()),
                   ),
                 )),

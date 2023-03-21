@@ -23,9 +23,17 @@ class ActionButton extends StatelessWidget {
           icon,
           if (label?.isNotEmpty ?? false) ...[
             const SizedBox(width: 8),
-            Text(
-              label!,
-              style: theme.textTheme.labelSmall,
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 400),
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                child: child,
+              ),
+              child: Text(
+                key: ValueKey(label),
+                label!,
+                style: theme.textTheme.labelSmall,
+              ),
             )
           ]
         ]),

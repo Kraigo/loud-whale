@@ -223,6 +223,14 @@ class _$StatusDao extends StatusDao {
   final InsertionAdapter<StatusHomeEntity> _statusHomeEntityInsertionAdapter;
 
   @override
+  Stream<int?> countAllStatusesStream() {
+    return _queryAdapter.queryStream('SELECT COUNT(id) FROM statuses',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        queryableName: 'statuses',
+        isView: false);
+  }
+
+  @override
   Future<List<StatusEntity>> findAllStatuses(
     int limit,
     int skip,
@@ -948,6 +956,14 @@ class _$TimelineDao extends TimelineDao {
   final InsertionAdapter<PollEntity> _pollEntityInsertionAdapter;
 
   final DeletionAdapter<AccountEntity> _accountEntityDeletionAdapter;
+
+  @override
+  Stream<int?> countAllStatusesStream() {
+    return _queryAdapter.queryStream('SELECT COUNT(id) FROM statuses',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        queryableName: 'statuses',
+        isView: false);
+  }
 
   @override
   Future<List<StatusEntity>> findAllStatuses(

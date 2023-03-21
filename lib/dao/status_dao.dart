@@ -3,6 +3,12 @@ import 'package:mastodon/enties/entries.dart';
 
 @dao
 abstract class StatusDao {
+
+  @Query('''
+    SELECT COUNT(id) FROM statuses
+  ''')
+  Stream<int?> countAllStatusesStream();
+
   @Query('''
   SELECT * FROM statuses
   WHERE isReblogged IS false
