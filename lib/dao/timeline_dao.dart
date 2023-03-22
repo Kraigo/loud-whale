@@ -47,8 +47,6 @@ abstract class TimelineDao
     await insertPolls(pollsEntries);
   }
 
-
-
   @transaction
   Future<void> saveNotifications(List<Notification> notifications) async {
     List<StatusEntity> statusesEntries = [];
@@ -56,19 +54,26 @@ abstract class TimelineDao
     List<NotificationEntity> notificationsEntries = [];
 
     for (var notification in notifications) {
-
       notificationsEntries.add(NotificationEntity.fromModel(notification));
       accountsEntries.add(AccountEntity.fromModel(notification.account));
 
       if (notification.status != null) {
         statusesEntries.add(StatusEntity.fromModel(notification.status!));
-        accountsEntries.add(AccountEntity.fromModel(notification.status!.account));
+        accountsEntries
+            .add(AccountEntity.fromModel(notification.status!.account));
       }
     }
 
     await insertAccounts(accountsEntries);
     await insertStatuses(statusesEntries);
     await insertNotifications(notificationsEntries);
+  }
+
+  @transaction
+  Future<void> saveAccounts(List<Account> accounts) async {
+    final accountsEntries =
+        accounts.map((a) => AccountEntity.fromModel(a)).toList();
+    await insertAccounts(accountsEntries);
   }
 
   Future<void> saveHomeStatuses(List<Status> statuses) async {
@@ -113,7 +118,8 @@ abstract class TimelineDao
       await populateStatus(status.reblog);
     }
     if (status.inReplyToAccountId != null) {
-      status.inReplyToAccount = await findAccountById(status.inReplyToAccountId!);
+      status.inReplyToAccount =
+          await findAccountById(status.inReplyToAccountId!);
     }
     return status;
   }

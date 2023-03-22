@@ -1,5 +1,6 @@
 import 'package:floor/floor.dart';
 import 'package:mastodon/enties/entries.dart';
+import 'package:mastodon_api/mastodon_api.dart';
 
 @dao
 abstract class AccountDao {
