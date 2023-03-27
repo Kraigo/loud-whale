@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:mastodon/providers/home_provider.dart';
+import 'package:mastodon/providers/search_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class StatusHTML extends StatelessWidget {
@@ -10,6 +13,11 @@ class StatusHTML extends StatelessWidget {
     try {
       await launchUrlString(url);
     } catch (_) {}
+  }
+
+  _openSearch(BuildContext context, String text) {
+    context.read<HomeProvider>().selectMenu(HomeMenu.search);
+    context.read<SearchProvider>().selectSearch(text);
   }
 
   @override
@@ -31,10 +39,17 @@ class StatusHTML extends StatelessWidget {
           textDecoration: TextDecoration.none,
         )
       },
-      onLinkTap: (url, context, attributes, element) {
-        debugPrint(url);
+      onLinkTap: (url, readContext, attributes, element) {
+        if (element != null) {
+          if (element!.className.contains('hashtag')) {
+            final text = element.innerHtml.replaceAll(RegExp(r'<[^>]+>'), '');
+            _openSearch(context, text);
+            return;
+          }
+        }
         if (url != null) {
           _openLink(url);
+          return;
         }
       },
     );

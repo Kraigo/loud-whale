@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/notifications_provider.dart';
 import 'package:mastodon/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -43,9 +44,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final notificationsProvider = context.read<NotificationsProvider>();
     notificationsProvider.loadNotificationsMore();
   }
+
   _onReadAll() async {
     final notificationsProvider = context.read<NotificationsProvider>();
+    final homeProvider = context.read<HomeProvider>();
     await notificationsProvider.readNotifications();
+
+    homeProvider.updateBadge(HomeMenu.notifications, 0);
   }
 
   _loadInitial() async {

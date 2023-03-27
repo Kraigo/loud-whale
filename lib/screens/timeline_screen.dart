@@ -17,6 +17,7 @@ class TimelineScreen extends StatefulWidget {
 class _TimelineScreenState extends State<TimelineScreen> {
   late ScrollController _scrollController;
   late StreamSubscription _updateSubscription;
+  late Timer _refreshTimer;
 
   @override
   void initState() {
@@ -37,6 +38,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
       timelineProvider.refresh();
     });
 
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _pullRefresh();
+      debugPrint("Timer refresh");
+    });
+
     super.initState();
   }
 
@@ -44,6 +50,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   void dispose() {
     _scrollController.dispose();
     _updateSubscription.cancel();
+    _refreshTimer.cancel();
     super.dispose();
   }
 
@@ -56,10 +63,13 @@ class _TimelineScreenState extends State<TimelineScreen> {
     final timelineProvider = context.read<TimelineProvider>();
     await timelineProvider.refresh();
     await timelineProvider.loadTimeline();
+    await timelineProvider.refresh();
   }
 
   Future<void> _pullRefresh() async {
-    await context.read<TimelineProvider>().loadTimeline();
+    final timelineProvider = context.read<TimelineProvider>();
+    await timelineProvider.loadTimelineRefresh();
+    await timelineProvider.refresh();
   }
 
   @override

@@ -62,7 +62,24 @@ class TimelineProvider extends ChangeNotifier {
         await timelineDao.saveStatuses(resp.data);
         await timelineDao.saveHomeStatuses(resp.data);
         _statuses.clear();
-        await refresh();
+      }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  loadTimelineRefresh() async {
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final resp = await MastodonHelper.api?.v1.timelines.lookupHomeTimeline(
+        minStatusId: _statuses.first.id,
+      );
+      if (resp != null) {
+        await timelineDao.saveStatuses(resp.data);
+        await timelineDao.saveHomeStatuses(resp.data);
       }
     } finally {
       _loading = false;
