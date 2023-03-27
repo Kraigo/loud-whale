@@ -6,7 +6,7 @@ import 'package:mastodon/providers/compose_provider.dart';
 import 'package:mastodon/providers/home_provider.dart';
 import 'package:mastodon/providers/notifications_provider.dart';
 import 'package:mastodon/providers/profile_provider.dart';
-import 'package:mastodon/providers/search_providers.dart';
+import 'package:mastodon/providers/search_provider.dart';
 import 'package:mastodon/providers/settings_provider.dart';
 import 'package:mastodon/providers/thread_provider.dart';
 import 'package:mastodon/providers/timeline_provider.dart';
