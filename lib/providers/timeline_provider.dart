@@ -5,7 +5,6 @@ import 'package:mastodon/dao/status_dao.dart';
 import 'package:mastodon/dao/timeline_dao.dart';
 import 'package:mastodon/enties/entries.dart';
 import 'package:mastodon/helpers/mastodon_helper.dart';
-import 'package:mastodon/helpers/sort_statuses.dart';
 
 class TimelineProvider extends ChangeNotifier {
   bool _loading = false;
@@ -17,7 +16,22 @@ class TimelineProvider extends ChangeNotifier {
   TimelineDao timelineDao;
 
   List<StatusEntity> _statuses = [];
-  List<StatusEntity> get statuses => _statuses;
+  List<StatusEntity> get statuses {
+    if (_latestStatusId != null) {
+      final latestStatusIdIndex =
+          _statuses.indexWhere((element) => element.id == _latestStatusId);
+      return _statuses.skip(latestStatusIdIndex).toList();
+    }
+    return _statuses;
+  }
+
+  bool get hasNewStatuses {
+    return _latestStatusId != null &&
+        _statuses.indexWhere((element) => element.id == _latestStatusId) > 0;
+  }
+
+  String? _latestStatusId;
+  String? get latestStatusId => _latestStatusId;
   final pageSize = 20;
 
   TimelineProvider({
@@ -26,6 +40,15 @@ class TimelineProvider extends ChangeNotifier {
     required this.attachmentDao,
     required this.timelineDao,
   });
+
+  testAdd() {
+    _statuses.insert(0, _statuses.last);
+    notifyListeners();
+  }
+
+  updateLatestStatusId(String? statusId) {
+    _latestStatusId = statusId;
+  }
 
   Future<void> refresh() async {
     final limit = _statuses.isNotEmpty ? _statuses.length : pageSize;
@@ -61,7 +84,8 @@ class TimelineProvider extends ChangeNotifier {
       if (resp != null) {
         await timelineDao.saveStatuses(resp.data);
         await timelineDao.saveHomeStatuses(resp.data);
-        _statuses.clear();
+        // _statuses.clear();
+        _latestStatusId = resp.data.first.id;
       }
     } finally {
       _loading = false;
@@ -69,7 +93,7 @@ class TimelineProvider extends ChangeNotifier {
     }
   }
 
-  loadTimelineRefresh() async {
+  loadTimelineRefresh({bool updateLatest = false}) async {
     _loading = true;
     notifyListeners();
 
@@ -80,6 +104,9 @@ class TimelineProvider extends ChangeNotifier {
       if (resp != null) {
         await timelineDao.saveStatuses(resp.data);
         await timelineDao.saveHomeStatuses(resp.data);
+        if (updateLatest) {
+          _latestStatusId = resp.data.first.id;
+        }
       }
     } finally {
       _loading = false;

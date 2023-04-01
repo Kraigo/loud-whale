@@ -39,7 +39,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
     });
 
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _pullRefresh();
+      _backgroundRefresh();
       debugPrint("Timer refresh");
     });
 
@@ -72,6 +72,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
     await timelineProvider.refresh();
   }
 
+  Future<void> _backgroundRefresh() async {
+    final timelineProvider = context.read<TimelineProvider>();
+    await timelineProvider.loadTimelineRefresh(updateLatest: false);
+    await timelineProvider.refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,9 +88,25 @@ class _TimelineScreenState extends State<TimelineScreen> {
           child: _TimelineLoading(),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _pullRefresh,
-        child: _TimelineList(controller: _scrollController),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _pullRefresh,
+            child: _TimelineList(
+              controller: _scrollController,
+            ),
+          ),
+          Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _ScrollTopButton(
+                  controller: _scrollController,
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -125,5 +147,43 @@ class _TimelineLoading extends StatelessWidget {
       return const SizedBox(height: 1, child: LinearProgressIndicator());
     }
     return Container();
+  }
+}
+
+class _ScrollTopButton extends StatelessWidget {
+  final ScrollController controller;
+  const _ScrollTopButton({
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final timelineProvider = context.watch<TimelineProvider>();
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.0, -1.0),
+            end: const Offset(0.0, 0.0),
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: child,
+        );
+      },
+      child: timelineProvider.hasNewStatuses
+          ? Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                child: const Text("Scroll to newest"),
+                onPressed: () async {
+                  timelineProvider.updateLatestStatusId(null);
+                  await timelineProvider.refresh();
+                  controller.jumpTo(0);
+                },
+              ),
+            )
+          : Container(),
+    );
   }
 }
