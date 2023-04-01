@@ -59,7 +59,7 @@ class _StatusPollState extends State<StatusPoll> {
               ),
             if (!_canVote) RefreshButton(poll: widget.poll),
             const SizedBox(
-              width: 12,
+              width: 8,
             ),
             Text(
               "${widget.poll.votesCount} people",
@@ -67,7 +67,7 @@ class _StatusPollState extends State<StatusPoll> {
             ),
             const Text(" - "),
             Text(
-              _expiresFormat,
+              widget.poll.isExpired ? 'Closed' : _expiresFormat,
               style: Theme.of(context).textTheme.labelMedium,
             ),
           ],
